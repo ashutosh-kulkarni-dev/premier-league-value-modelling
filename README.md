@@ -5,7 +5,7 @@ values (Transfermarkt €) and wages (FM-estimated £/wk) from on-pitch performa
 and scouted attributes, and flag players where the actual market valuation
 diverges most from what the measurable features alone would predict.
 
-> **Live demo:** _add Vercel URL here after deploy_
+> **Live demo:** https://premier-league-value-modelling-web.vercel.app/
 
 > The project treats the model's **residuals as the deliverable**, not as errors
 > to minimise. Residuals quantify the "human premium" that mechanical features
