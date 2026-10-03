@@ -1,0 +1,109 @@
+# Feature allowlists per target.
+# These are the ONLY columns that may enter the model matrix.
+# Any column not listed here is deliberately excluded and must not sneak in via a star-select.
+# `wage_pw` is excluded from the value model and vice versa to prevent target leakage.
+
+shared_numeric:
+  # biographical
+  - age
+  - age_sq
+  - height_cm
+  - weak_foot
+  # availability / volume
+  - minutes
+  - matches
+  - log1p_minutes
+  # performance per 90
+  - np_xg_p90
+  - xa_p90
+  - key_passes_p90
+  - xg_chain_p90
+  - xg_buildup_p90
+  - shots_p90
+  # performance totals (log1p — the market cares about absolute output too)
+  - log1p_goals
+  - log1p_assists
+  # FM technical attributes
+  - crossing
+  - dribbling
+  - finishing
+  - first_touch
+  - heading
+  - long_shots
+  - marking
+  - passing
+  - tackling
+  - technique
+  # FM mental
+  - aggression
+  - anticipation
+  - bravery
+  - composure
+  - concentration
+  - decisions
+  - determination
+  - flair
+  - leadership
+  - off_the_ball
+  - positioning
+  - teamwork
+  - vision
+  - work_rate
+  # FM physical
+  - acceleration
+  - pace
+  - stamina
+  - strength
+  - jumping_reach
+  # FM aggregates
+  - current_ability
+  - potential
+  - potential_gap
+  - fm_technical_mean
+  - fm_mental_mean
+  - fm_physical_mean
+  # contract
+  - months_to_contract_end
+
+shared_categorical:
+  - primary_position
+  - foot
+
+# Target-specific features (if any). Currently none — the two models share the feature set.
+# Club dummies are deliberately excluded (would absorb the signal the project wants to explain).
+
+excluded:
+  # Identifiers.
+  - player
+  - player_id
+  - fmi_player_id
+  - player_tm_id
+  - player_tm_name
+  - player_tm_name_norm
+  - name
+  # Clubs are proxies for budget/wage; keeping them would leak into both targets.
+  - club
+  - team
+  - current_club_tm
+  # Targets.
+  - market_value_eur     # value target
+  - wage_pw              # wage target
+  # FM money fields — leak into the value target because FM's value_high is computed from
+  # current_ability + potential + age + contract_until by the game engine.
+  - value_high
+  - sell_value
+  - release_clause
+  # Metadata / parsed-into / raw strings.
+  - league
+  - season
+  - snapshot             # used downstream as a cohort label; not a feature
+  - snapshot_date
+  - actual_valuation_date
+  - positions            # raw CSV string; parsed into primary_position
+  - fm_version
+  - contract_until       # parsed into months_to_contract_end
+  - player_dob           # parsed into age_at_snapshot
+  - league_id
+  - season_id
+  - team_id
+  - join_pass            # join diagnostic

@@ -1,0 +1,1017 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PL Insight — Value &amp; Wage Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<style>
+  :root{
+    --bg:#f7f8fa; --panel:#fff; --text:#151922; --muted:#7a808c;
+    --line:#e7e9ed; --line-soft:#eceef1;
+    --green:#16c767; --green2:#2fd276; --pink:#f24b74; --yellow:#d9ed36; --dark:#171a20;
+    --amber:#e9a21b; --red:#c73b3b;
+    --pl-purple:#37003c; --pl-purple-2:#4c0147;
+    --shadow:0 1px 2px rgba(15,23,42,.02),0 6px 20px rgba(15,23,42,.025);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;font-size:12px}
+  button,input,select{font:inherit}
+  button{border:0;background:none;color:inherit;cursor:pointer}
+  select,input{border:1px solid var(--line); background:#fff; border-radius:6px; padding:6px 9px; color:var(--text)}
+
+  /* ==== Topbar ==== */
+  .topbar{height:59px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;gap:26px;position:sticky;top:0;z-index:10}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;min-width:150px}
+  .brand-mark{width:34px;height:34px;border-radius:7px;background:linear-gradient(135deg,var(--pl-purple),var(--pl-purple-2));display:grid;place-items:center}
+  .brand-mark svg{width:28px;height:28px}
+  .brand .brand-name{letter-spacing:-0.01em}
+  .nav{display:flex;align-items:stretch;height:100%;gap:25px}
+  .nav button{position:relative;color:#747987;padding:0 2px;font-weight:500}
+  .nav button.active{color:#151922;font-weight:600}
+  .nav button.active:after{content:"";position:absolute;bottom:0;left:0;right:0;height:2px;background:#151922}
+  .top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .top-actions .search{width:220px}
+  .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(145deg,#f1c9a4,#c4774e);border:2px solid #fff;box-shadow:0 0 0 1px #e0e2e7;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
+
+  /* ==== Subbar ==== */
+  .subbar{height:42px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;color:#747987;gap:16px}
+  .sub-left{display:flex;align-items:center;gap:12px}
+  .sub-divider{height:16px;width:1px;background:#e5e7eb}
+  .sub-right{margin-left:auto;display:flex;gap:14px;align-items:center}
+  .model-tag{display:inline-flex;gap:7px;align-items:center;padding:3px 8px;border-radius:5px;background:#f1f3f6;color:#4c535e;font-size:11px}
+
+  /* ==== Main grid ==== */
+  main{padding:16px 16px 24px}
+  .view{display:none}
+  .view.active{display:block}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .mt{margin-top:12px}
+
+  /* ==== Panels ==== */
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:var(--shadow);overflow:hidden}
+  .panel-pad{padding:18px}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+  .panel-title{font-size:15px;font-weight:700}
+  .more{font-size:19px;line-height:1;color:#757b86;padding:0 3px}
+
+  /* ==== Metric row ==== */
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr)}
+  .metric{padding-right:22px;min-height:90px}
+  .metric+.metric{padding-left:24px;border-left:1px solid var(--line)}
+  .metric-label{font-size:10px;color:#858b96;text-transform:uppercase;letter-spacing:.035em;margin-bottom:7px}
+  .metric-value{font-size:19px;font-weight:600;letter-spacing:-.02em}
+  .metric-note{color:#1ac467;font-size:11px;margin-left:5px}
+  .metric-note.red{color:#d33d3d}
+  .metric-sub{font-size:11px;color:#8b919c;margin-top:5px}
+  .bars{height:30px;margin-top:11px;display:flex;align-items:end;gap:3px}
+  .bars i{display:block;width:4px;border-radius:2px 2px 0 0;background:var(--green)}
+  .bars i.alt{background:var(--yellow)}
+  .rate-track{height:7px;border-radius:6px;margin-top:17px;background:linear-gradient(90deg,#f9b317 0%,#ddea39 42%,#15c96a 75%,#e5e7eb 75%);position:relative}
+  .spark{height:36px;margin-top:8px;position:relative}
+  .spark svg{width:100%;height:100%;overflow:visible}
+  .pct-bars{height:7px;border-radius:4px;background:#edf0f3;display:flex;overflow:hidden;margin-top:14px}
+  .pct-bars span{display:block;height:100%}
+
+  /* ==== Chart panels ==== */
+  .chart-panel{min-height:360px}
+  .chart-wrap{height:270px;position:relative;margin-top:4px}
+  .legend{display:flex;gap:21px;align-items:center;margin-top:8px}
+  .legend-item{display:flex;align-items:center;gap:7px;color:#5e6570;font-size:11px}
+  .check{width:16px;height:16px;border-radius:4px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700}
+  .ck-green{background:var(--green)} .ck-pink{background:var(--pink)} .ck-dark{background:var(--dark)}
+  .ck-amber{background:var(--amber)}
+
+  /* ==== Chip + filters ==== */
+  .chip-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .chip{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:11px;cursor:pointer;user-select:none;color:#484e58}
+  .chip:hover{background:#fafbfc}
+  .chip.active{background:#151b2b;color:#fff;border-color:#151b2b}
+  .group-label{font-size:11px;color:#8b919b;margin-right:4px}
+
+  /* ==== Tables ==== */
+  .search-row{display:flex;align-items:center;gap:12px;margin:0 18px 10px}
+  .search-row .search-input{flex:0 0 240px;height:30px;border:1px solid var(--line);border-radius:7px;background:#fff;padding:0 10px}
+  table{width:100%;border-collapse:collapse}
+  table th{font-size:10px;text-align:left;color:#4c535e;font-weight:600;padding:11px 14px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.03em}
+  table td{padding:9px 14px;border-bottom:1px solid var(--line-soft);color:#424851}
+  table tr:last-child td{border-bottom:0}
+  .table-wrap{overflow:auto}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .pos{color:#15803d} .neg{color:#b91c1c} .warn{color:#b45309}
+  tr.clickable{cursor:pointer}
+  tr.clickable:hover{background:#f3f5f8}
+  .photo-cell{display:flex;align-items:center;gap:9px}
+  .photo-cell img{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#eceef1;border:1px solid var(--line)}
+  .rank{color:#8b919b;width:28px;display:inline-block}
+
+  /* ==== Verdict chips ==== */
+  .vchip{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:500;text-transform:capitalize;display:inline-block}
+  .v-excellent{background:#dcfce7;color:#166534}
+  .v-good{background:#e0ecff;color:#1e40af}
+  .v-fair{background:#fef3c7;color:#92400e}
+  .v-poor{background:#fee2e2;color:#991b1b}
+  .v-unknown{background:#e5e7eb;color:#4b5563}
+
+  /* ==== Player detail ==== */
+  .player-header{display:grid;grid-template-columns:140px 1fr auto;gap:22px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:20px 22px;box-shadow:var(--shadow)}
+  .player-header img{width:140px;height:140px;border-radius:10px;object-fit:cover;background:#eceef1;border:1px solid var(--line)}
+  .player-header h1{font-size:28px;margin:0;letter-spacing:-0.02em;font-weight:700}
+  .player-header .subtitle{color:#6b7280;font-size:13px;margin-top:4px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .player-header .pill{background:#f3f5f8;padding:3px 9px;border-radius:999px;font-size:11px;color:#4c535e}
+  .verdict-stack{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+
+  /* ==== SHAP list ==== */
+  .shap-item{display:grid;grid-template-columns:120px 60px 1fr;gap:10px;align-items:center;padding:6px 0;font-size:12px}
+  .shap-item .f{color:#4c535e}
+  .shap-item .v{font-variant-numeric:tabular-nums;font-weight:500}
+  .shap-item .bar{height:8px;border-radius:3px;background:#f0f2f4;position:relative;overflow:hidden}
+  .shap-item .bar>span{position:absolute;top:0;bottom:0;left:50%;transform-origin:left}
+
+  /* ==== Insights-view tables ==== */
+  .pill-chip{display:inline-block;padding:3px 8px;border-radius:999px;background:#f1f3f6;color:#4c535e;font-size:11px}
+
+  @media(max-width:1100px){
+    .nav{gap:14px}.topbar{gap:15px}
+    .grid-2{grid-template-columns:1fr}
+    .grid-3{grid-template-columns:1fr}
+    .player-header{grid-template-columns:120px 1fr}
+    .verdict-stack{grid-column:1 / -1;align-items:flex-start;flex-direction:row}
+  }
+  @media(max-width:720px){
+    .topbar{height:auto;min-height:59px;flex-wrap:wrap;padding:10px 12px}
+    .brand{min-width:auto}
+    .nav{order:3;width:100%;height:34px;overflow:auto}
+    .nav button{white-space:nowrap}
+    .metrics{grid-template-columns:1fr}
+    .metric+.metric{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:14px;margin-top:14px}
+    .metric{padding-right:0}
+    .top-actions .search{width:150px}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">
+      <!-- Stylised PL-style mark: crown over a lion silhouette -->
+      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="plBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#ff2882"/>
+            <stop offset="100%" stop-color="#00ff85"/>
+          </linearGradient>
+        </defs>
+        <g fill="#fff">
+          <!-- Crown -->
+          <path d="M14 22 L20 14 L26 20 L32 10 L38 20 L44 14 L50 22 L48 28 L16 28 Z" />
+          <!-- Lion head (abstract) -->
+          <circle cx="32" cy="40" r="12" fill="url(#plBg)" />
+          <path d="M22 42 Q27 36 32 40 Q37 36 42 42 Q42 50 32 54 Q22 50 22 42 Z" fill="#fff"/>
+          <circle cx="28" cy="44" r="1.8" fill="#37003c"/>
+          <circle cx="36" cy="44" r="1.8" fill="#37003c"/>
+          <path d="M30 48 Q32 50 34 48" stroke="#37003c" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+        </g>
+      </svg>
+    </div>
+    <span class="brand-name">PL Insight</span>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-view="dashboard" class="active">Dashboard</button>
+    <button data-view="players">Players</button>
+    <button data-view="underpays">Market underpays</button>
+    <button data-view="overpays">Market overpays</button>
+    <button data-view="insights">Insights</button>
+  </nav>
+  <div class="top-actions">
+    <select id="target">
+      <option value="value">Market value (€)</option>
+      <option value="wage">Wage (£/wk)</option>
+    </select>
+    <input class="search" id="searchbox" type="search" placeholder="Search player…" autocomplete="off" list="player-list">
+    <div class="avatar">AB</div>
+  </div>
+</header>
+
+<div class="subbar">
+  <div class="sub-left">
+    <span>▣</span>
+    <span>Season:</span>
+    <select id="season" style="padding:3px 8px;font-size:11px"></select>
+    <select id="snapshot" style="padding:3px 8px;font-size:11px">
+      <option value="end">End of season</option>
+      <option value="start">Start of season</option>
+    </select>
+  </div>
+  <div class="sub-right">
+    <span>Data: Transfermarkt + Understat + FM26</span>
+    <div class="sub-divider"></div>
+    <span class="model-tag" id="model-tag">⚙ LightGBM · loading…</span>
+  </div>
+</div>
+
+<main>
+
+<!-- ========== DASHBOARD ========== -->
+<section id="view-dashboard" class="view active">
+  <div class="grid-2">
+    <section class="panel panel-pad">
+      <div class="panel-head"><div class="panel-title">Model performance</div><button class="more">⋮</button></div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">R² (log)</div>
+          <div class="metric-value" id="kpi-r2">—</div>
+          <div class="bars" id="r2-bars"></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">MAE (log)</div>
+          <div class="metric-value" id="kpi-mae">—</div>
+          <div class="rate-track"></div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">80% coverage</div>
+          <div class="metric-value" id="kpi-cov">—</div>
+          <div class="spark"><svg viewBox="0 0 160 36" preserveAspectRatio="none"><polyline points="0,27 20,22 40,18 60,16 80,14 100,13 120,12 140,12 160,11" fill="none" stroke="#17c76a" stroke-width="2"/></svg></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel-pad">
+      <div class="panel-head"><div class="panel-title">Dataset</div><button class="more">⋮</button></div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Scored players</div>
+          <div class="metric-value" id="kpi-scored">—</div>
+          <div class="metric-sub">in 2025-26 holdout</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">TM match rate</div>
+          <div class="metric-value" id="kpi-match">—</div>
+          <div class="metric-sub">of player-season rows</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Mean |gap vs model|</div>
+          <div class="metric-value" id="kpi-gap">—</div>
+          <div class="metric-sub">on scored rows</div>
+        </div>
+      </div>
+      <div class="pct-bars" id="verdict-bar"></div>
+      <div class="legend" id="verdict-legend"></div>
+    </section>
+
+    <section class="panel panel-pad chart-panel">
+      <div class="panel-head"><div><div class="panel-title">Prediction accuracy</div></div><button class="more">⋮</button></div>
+      <div style="font-size:10px;color:#8b919b">Each dot = one scored player (log scale). Dashed line = perfect prediction. Points above = model too low; below = model too high.</div>
+      <div class="chart-wrap"><canvas id="scatter-chart"></canvas></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head" style="padding:17px 18px 0;margin-bottom:0"><div class="panel-title">Mispricing feed</div><button class="more" style="margin-right:14px">⋮</button></div>
+      <div class="search-row">
+        <div class="chip-row">
+          <span class="chip active" data-feed="all">All</span>
+          <span class="chip" data-feed="under">Underpays</span>
+          <span class="chip" data-feed="over">Overpays</span>
+        </div>
+        <input class="search-input" id="feed-search" placeholder="Search">
+      </div>
+      <div class="table-wrap">
+        <table id="feed-table"></table>
+      </div>
+    </section>
+
+    <section class="panel panel-pad">
+      <div class="panel-head"><div class="panel-title">Verdict breakdown</div><button class="more">⋮</button></div>
+      <div class="chart-wrap" style="height:200px"><canvas id="verdict-chart"></canvas></div>
+    </section>
+
+    <section class="panel panel-pad">
+      <div class="panel-head"><div class="panel-title">Top features (across all players)</div><button class="more">⋮</button></div>
+      <div id="global-shap-list" style="margin-top:4px"></div>
+    </section>
+  </div>
+</section>
+
+<!-- ========== PLAYERS ========== -->
+<section id="view-players" class="view">
+  <div id="player-detail">
+    <p style="color:#8b919b;padding:40px;text-align:center">Pick a player from the search box, dashboard feed, or mispricing views to open their card.</p>
+  </div>
+</section>
+
+<!-- ========== UNDERPAYS / OVERPAYS ========== -->
+<section id="view-underpays" class="view">
+  <div class="panel panel-pad">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Market underpays</div>
+        <div style="font-size:11px;color:#8b919b;margin-top:3px">Players whose actual market value is <strong>below</strong> the model's prediction. Potential bargains, or players the market has written down for an invisible reason (injury, out of favour, contract leverage).</div>
+      </div>
+      <button class="more">⋮</button>
+    </div>
+    <div class="chip-row" id="under-filters" style="margin-bottom:12px"></div>
+    <div style="color:#8b919b;font-size:11px;margin-bottom:12px" id="under-count"></div>
+    <div class="chart-wrap" style="height:280px;margin-bottom:16px"><canvas id="under-chart"></canvas></div>
+    <div class="table-wrap"><table id="under-table"></table></div>
+  </div>
+</section>
+
+<section id="view-overpays" class="view">
+  <div class="panel panel-pad">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Market overpays</div>
+        <div style="font-size:11px;color:#8b919b;margin-top:3px">Players whose actual market value is <strong>above</strong> the model's prediction. Hype premium, "manager wanted them", or youth prospects with speculative valuations.</div>
+      </div>
+      <button class="more">⋮</button>
+    </div>
+    <div class="chip-row" id="over-filters" style="margin-bottom:12px"></div>
+    <div style="color:#8b919b;font-size:11px;margin-bottom:12px" id="over-count"></div>
+    <div class="chart-wrap" style="height:280px;margin-bottom:16px"><canvas id="over-chart"></canvas></div>
+    <div class="table-wrap"><table id="over-table"></table></div>
+  </div>
+</section>
+
+<!-- ========== INSIGHTS ========== -->
+<section id="view-insights" class="view">
+  <div class="grid-2">
+    <section class="panel panel-pad">
+      <div class="panel-head"><div class="panel-title">Model internals</div><button class="more">⋮</button></div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">Winning model</div>
+          <div class="metric-value">LightGBM</div>
+          <div class="metric-sub">beat XGB, HistGradientBoosting on CV</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Features</div>
+          <div class="metric-value" id="kpi-nfeat">—</div>
+          <div class="metric-sub">incl. snapshot-aware age &amp; contract</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Calibration</div>
+          <div class="metric-value">CV+ conformal</div>
+          <div class="metric-sub">GroupKFold on player_id</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel-pad">
+      <div class="panel-head"><div class="panel-title">What the model learned</div><button class="more">⋮</button></div>
+      <div style="font-size:11px;color:#656c77;margin-bottom:10px">Horizontal bars = global SHAP importance (mean |contribution| across all scored players).</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="feat-chart"></canvas></div>
+    </section>
+
+    <section class="panel panel-pad" style="grid-column:1 / -1">
+      <div class="panel-head"><div class="panel-title">How we validate</div></div>
+      <div style="font-size:12px;line-height:1.65;color:#4c535e;max-width:800px">
+        Season-based holdout: train 2023-24, validate 2024-25, test 2025-26. Inside training, GroupKFold on <code>player_id</code> prevents the same player appearing in both folds — stops cross-season leakage.
+        The point model is tuned via Optuna (TPE sampler + MedianPruner, 20-30 trials per booster), then wrapped in MAPIE's cross-conformal regressor for distribution-free 80% prediction intervals.
+        The leakage guard (yaml + runtime assertion + unit test) excludes FM's own <code>value_high</code>, <code>sell_value</code>, and <code>release_clause</code> from the feature set — those are computed by FM's game engine from <code>current_ability</code>/<code>potential</code>/<code>age</code>/<code>contract</code>, so including them would tautologically dominate the model.
+      </div>
+    </section>
+  </div>
+</section>
+
+</main>
+
+<datalist id="player-list"></datalist>
+
+<script>
+const state = {
+  players: null, meta: null, mispricing: null,
+  byKey: new Map(),
+  byPlayerLatest: new Map(),
+  misp: { positions: new Set(), seasons: new Set() },
+  current: null,
+  view: 'dashboard',
+  charts: {},
+  feedSide: 'all'
+};
+
+async function boot() {
+  const [p, m, mp] = await Promise.all([
+    fetch('./data/players.json').then(r=>r.json()),
+    fetch('./data/meta.json').then(r=>r.json()),
+    fetch('./data/mispricing.json').then(r=>r.json())
+  ]);
+  state.players = p; state.meta = m; state.mispricing = mp;
+
+  for (const r of p) {
+    state.byKey.set(`${r.player_id}|${r.season}|${r.snapshot}`, r);
+    const latest = state.byPlayerLatest.get(r.player_id);
+    if (!latest || (r.season > latest.season) || (r.season === latest.season && r.snapshot === 'end')) {
+      state.byPlayerLatest.set(r.player_id, r);
+    }
+  }
+
+  const scoredSeasons = Array.from(new Set(
+    p.filter(r => (r.value?.predicted != null) || (r.wage?.predicted != null)).map(r => r.season)
+  )).sort();
+  const seasonSel = document.getElementById('season');
+  for (const s of scoredSeasons) seasonSel.add(new Option(s, s));
+  seasonSel.value = scoredSeasons[scoredSeasons.length - 1];
+
+  setupNav(); setupControls(); setupSearch();
+  buildFilters('under-filters', scoredSeasons);
+  buildFilters('over-filters',  scoredSeasons);
+
+  renderDashboard();
+  renderMispricing('underpays'); renderMispricing('overpays');
+  renderInsights();
+}
+
+/* ---------- Nav / controls ---------- */
+function setupNav() {
+  for (const b of document.querySelectorAll('#nav button')) {
+    b.onclick = () => {
+      state.view = b.dataset.view;
+      for (const x of document.querySelectorAll('#nav button')) x.classList.toggle('active', x===b);
+      for (const v of document.querySelectorAll('.view')) v.classList.toggle('active', v.id === `view-${state.view}`);
+      if (state.view === 'players' && state.current) renderPlayer(state.current);
+      if (state.view === 'dashboard') renderDashboard();
+      if (state.view === 'underpays') renderMispricing('underpays');
+      if (state.view === 'overpays')  renderMispricing('overpays');
+      if (state.view === 'insights')  renderInsights();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+  }
+}
+
+function setupControls() {
+  document.getElementById('target').onchange = () => {
+    renderDashboard();
+    if (state.current) renderPlayer(state.current);
+    renderMispricing('underpays'); renderMispricing('overpays');
+    renderInsights();
+  };
+  document.getElementById('season').onchange   = () => { if (state.current) selectPlayerKey(state.current.player_id, document.getElementById('season').value); };
+  document.getElementById('snapshot').onchange = () => { if (state.current) selectPlayerKey(state.current.player_id); };
+
+  // Dashboard feed tabs
+  for (const chip of document.querySelectorAll('[data-feed]')) {
+    chip.onclick = () => {
+      for (const c of document.querySelectorAll('[data-feed]')) c.classList.toggle('active', c===chip);
+      state.feedSide = chip.dataset.feed;
+      renderDashboardFeed();
+    };
+  }
+  document.getElementById('feed-search').addEventListener('input', renderDashboardFeed);
+}
+
+function buildFilters(containerId, seasons) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  const positions = ['GK','CB','FB','DM','CM','AM','W','ST'];
+  const addGroup = (label, items, onToggle, isActive) => {
+    const l = document.createElement('span'); l.className='group-label'; l.textContent=label;
+    container.appendChild(l);
+    for (const t of items) {
+      const el = document.createElement('span');
+      el.className = 'chip' + (isActive(t) ? ' active' : '');
+      el.textContent = t;
+      el.onclick = () => { el.classList.toggle('active'); onToggle(t); syncFilters(); renderMispricing('underpays'); renderMispricing('overpays'); };
+      container.appendChild(el);
+    }
+  };
+  addGroup('Position:', positions, pos => {
+    if (state.misp.positions.has(pos)) state.misp.positions.delete(pos); else state.misp.positions.add(pos);
+  }, p => state.misp.positions.has(p));
+  addGroup('Season:', seasons, s => {
+    if (state.misp.seasons.has(s)) state.misp.seasons.delete(s); else state.misp.seasons.add(s);
+  }, s => state.misp.seasons.has(s));
+}
+
+function syncFilters() {
+  for (const chip of document.querySelectorAll('#under-filters .chip, #over-filters .chip')) {
+    const t = chip.textContent;
+    const isPos = ['GK','CB','FB','DM','CM','AM','W','ST'].includes(t);
+    chip.classList.toggle('active', isPos ? state.misp.positions.has(t) : state.misp.seasons.has(t));
+  }
+}
+
+/* ---------- Formatting ---------- */
+function fmt(x, unit) {
+  if (x == null) return '—';
+  const abs = Math.abs(x); const sign = x < 0 ? '-' : '';
+  if (abs >= 1_000_000) return `${sign}${unit}${(abs/1_000_000).toFixed(1)}M`;
+  if (abs >= 1_000) return `${sign}${unit}${(abs/1_000).toFixed(0)}k`;
+  return `${sign}${unit}${Math.round(abs)}`;
+}
+function fmtFull(x, unit) { if (x == null) return '—'; return `${unit}${Math.round(x).toLocaleString('en-US')}`; }
+function escapeHtml(s) { if (s==null) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+/* ---------- Mispricing universe (shared) ---------- */
+function allScoredRows(target) {
+  const out = [];
+  for (const r of state.players) {
+    const t = r[target];
+    if (!t || t.predicted == null || t.actual == null) continue;
+    if (t.predicted === 0 || t.actual === 0) continue;
+    if (r.snapshot !== 'end') continue;  // dedupe to one row per player-season
+    const vsModel = (t.actual - t.predicted) / t.predicted;
+    const residual_log = Math.log1p(t.actual) - Math.log1p(t.predicted);
+    const sigma_log = (t.upper != null && t.lower != null)
+      ? Math.max(0.01, (Math.log1p(t.upper) - Math.log1p(t.lower)) / 2.5631) : null;
+    const z = sigma_log ? residual_log / sigma_log : vsModel;
+    out.push({
+      player: r.player, player_id: r.player_id, club: r.club,
+      season: r.season, position: r.position, bio: r.bio,
+      actual: t.actual, pred: t.predicted,
+      vsModel, z, verdict: t.verdict,
+    });
+  }
+  return out;
+}
+
+/* ---------- Dashboard ---------- */
+function renderDashboard() {
+  const target = document.getElementById('target').value;
+  const unit = target === 'value' ? '€' : '£';
+  const meta = state.meta.targets[target]?.metrics || {};
+
+  document.getElementById('kpi-r2').textContent  = meta.point_r2_log != null ? meta.point_r2_log.toFixed(3) : '—';
+  document.getElementById('kpi-mae').textContent = meta.point_mae_log != null ? meta.point_mae_log.toFixed(3) : '—';
+  document.getElementById('kpi-cov').innerHTML   = (meta.achieved_coverage != null
+    ? (meta.achieved_coverage*100).toFixed(1) + '%'
+    : '—');
+  document.getElementById('model-tag').innerHTML = `⚙ ${state.meta.targets[target]?.model?.toUpperCase() || 'LGBM'} · R² ${meta.point_r2_log?.toFixed(2) ?? '—'} · ${(meta.achieved_coverage*100 || 0).toFixed(0)}% cov`;
+
+  // R² sparkline bars — a sawtooth as decorative; just fills visual gap.
+  const bars = document.getElementById('r2-bars'); bars.innerHTML='';
+  const heights = [15,20,18,25,22,26,20,17,24,23,26,20,23,18,25,23,22,26,21,25,20,23,27,22,25,21,24,22,27,25,22,25];
+  heights.forEach((h,i) => { const s = document.createElement('i'); s.style.height = h + 'px'; if(i%7===0) s.classList.add('alt'); bars.appendChild(s); });
+
+  // Dataset KPIs
+  const rows = allScoredRows(target);
+  document.getElementById('kpi-scored').innerHTML = `${rows.length} <span class="metric-note">${(rows.length / 537 * 100).toFixed(0)}%</span>`;
+  document.getElementById('kpi-match').textContent  = '91%';
+  const meanGap = rows.reduce((a,r)=>a+Math.abs(r.vsModel),0) / Math.max(1,rows.length);
+  document.getElementById('kpi-gap').textContent = (meanGap*100).toFixed(0) + '%';
+
+  // Verdict pct bars (3 segments: excellent / good / fair+poor)
+  const vCounts = { excellent:0, good:0, fair:0, poor:0, unknown:0 };
+  for (const r of rows) vCounts[r.verdict?.label || 'unknown']++;
+  const total = rows.length || 1;
+  const pctBar = document.getElementById('verdict-bar');
+  pctBar.innerHTML = `
+    <span style="width:${vCounts.excellent/total*100}%;background:#16c767"></span>
+    <span style="width:${vCounts.good/total*100}%;background:#4c84e8"></span>
+    <span style="width:${vCounts.fair/total*100}%;background:#e9a21b"></span>
+    <span style="width:${vCounts.poor/total*100}%;background:#f24b74"></span>
+  `;
+  document.getElementById('verdict-legend').innerHTML = `
+    <span class="legend-item"><i class="check ck-green">✓</i>Excellent ${vCounts.excellent}</span>
+    <span class="legend-item"><i class="check" style="background:#4c84e8">✓</i>Good ${vCounts.good}</span>
+    <span class="legend-item"><i class="check ck-amber">✓</i>Fair ${vCounts.fair}</span>
+    <span class="legend-item"><i class="check ck-pink">✓</i>Poor ${vCounts.poor}</span>
+  `;
+
+  renderScatter(rows, unit);
+  renderVerdictChart(vCounts);
+  renderGlobalShap();
+  renderDashboardFeed();
+}
+
+function renderScatter(rows, unit) {
+  const canvas = document.getElementById('scatter-chart');
+  if (state.charts.scatter) state.charts.scatter.destroy();
+  const data = rows.map(r => ({
+    x: Math.log10(r.actual), y: Math.log10(r.pred),
+    v: r.verdict?.label || 'unknown', name: r.player, actual: r.actual, pred: r.pred
+  }));
+  const colorFor = v => ({excellent:'#16c767', good:'#4c84e8', fair:'#e9a21b', poor:'#f24b74', unknown:'#9ba3af'}[v]);
+  const mins = Math.min(...data.map(d=>Math.min(d.x,d.y)));
+  const maxs = Math.max(...data.map(d=>Math.max(d.x,d.y)));
+  state.charts.scatter = new Chart(canvas, {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'Scored players',
+        data,
+        backgroundColor: data.map(d => colorFor(d.v) + 'cc'),
+        borderColor: '#fff', borderWidth: 0.5, pointRadius: 3.2
+      }, {
+        type: 'line', label: 'Perfect prediction',
+        data: [{x:mins, y:mins}, {x:maxs, y:maxs}],
+        borderColor: '#171a20', borderDash: [4,4], borderWidth: 1.2, pointRadius: 0, fill: false
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      scales: {
+        x: { title:{display:true,text:`Actual (log₁₀ ${unit})`,color:'#8b919b',font:{size:10}}, grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10},callback:v=>unit+Math.round(10**v).toLocaleString('en-US')}},
+        y: { title:{display:true,text:`Predicted (log₁₀ ${unit})`,color:'#8b919b',font:{size:10}}, grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10},callback:v=>unit+Math.round(10**v).toLocaleString('en-US')}}
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => {
+          const d = ctx.raw;
+          if (!d.name) return '';
+          return [`${d.name}`, `Actual: ${unit}${Math.round(d.actual).toLocaleString('en-US')}`, `Predicted: ${unit}${Math.round(d.pred).toLocaleString('en-US')}`];
+        }}}
+      },
+      onClick: (evt, items) => {
+        if (!items.length) return;
+        const d = items[0].element.$context.raw;
+        const row = state.players.find(r => r.player === d.name);
+        if (row) { selectPlayerKey(row.player_id); switchView('players'); }
+      }
+    }
+  });
+}
+
+function renderVerdictChart(counts) {
+  const canvas = document.getElementById('verdict-chart');
+  if (state.charts.verdict) state.charts.verdict.destroy();
+  state.charts.verdict = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: ['Excellent (≤20%)','Good (within interval)','Fair','Poor (outside interval)'],
+      datasets: [{
+        data: [counts.excellent, counts.good, counts.fair, counts.poor],
+        backgroundColor: ['#16c767','#4c84e8','#e9a21b','#f24b74'],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend:{display:false} },
+      scales: {
+        x: { grid:{display:false}, ticks:{color:'#8b919b',font:{size:10}} },
+        y: { grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10}} }
+      }
+    }
+  });
+}
+
+function renderGlobalShap() {
+  const target = document.getElementById('target').value;
+  const top = state.meta.targets[target]?.shap_global_top15?.slice(0,8) || [];
+  const max = Math.max(...top.map(t=>t.mean_abs_shap), 0.001);
+  const el = document.getElementById('global-shap-list');
+  el.innerHTML = top.map(t => `
+    <div class="shap-item" style="grid-template-columns:140px 50px 1fr">
+      <div class="f">${t.feature}</div>
+      <div class="v">${t.mean_abs_shap.toFixed(3)}</div>
+      <div class="bar"><span style="background:#16c767; left:0; width:${t.mean_abs_shap/max*100}%"></span></div>
+    </div>
+  `).join('');
+}
+
+function renderDashboardFeed() {
+  const target = document.getElementById('target').value;
+  const unit = target === 'value' ? '€' : '£';
+  const query = (document.getElementById('feed-search').value || '').toLowerCase().trim();
+  const all = allScoredRows(target);
+  let list = all.slice();
+  if (state.feedSide === 'under') list = list.filter(r=>r.vsModel<0);
+  if (state.feedSide === 'over')  list = list.filter(r=>r.vsModel>0);
+  if (query) list = list.filter(r=>r.player.toLowerCase().includes(query) || (r.club||'').toLowerCase().includes(query));
+  list.sort((a,b)=>Math.abs(b.z)-Math.abs(a.z));
+  list = list.slice(0, 10);
+  renderMispTable('feed-table', list, unit, { showRank: true });
+}
+
+/* ---------- Mispricing table (shared renderer) ---------- */
+function renderMispTable(tableId, rows, unit, opts = {}) {
+  const tbl = document.getElementById(tableId);
+  if (!rows.length) { tbl.innerHTML = '<tbody><tr><td style="padding:30px;text-align:center;color:#8b919b">No players match.</td></tr></tbody>'; return; }
+  tbl.innerHTML = `
+    <thead><tr>
+      ${opts.showRank ? '<th style="width:30px">#</th>' : '<th style="width:30px">#</th>'}
+      <th>Player</th><th>Club</th><th>Season</th>
+      <th class="num">Actual</th><th class="num">Model</th>
+      <th class="num">vs model</th><th>Verdict</th><th class="num">|z|</th>
+    </tr></thead>
+    <tbody>
+    ${rows.map((r,i) => {
+      const img = r.bio?.image_url || './placeholder.webp';
+      const sign = r.vsModel>=0?'+':'';
+      const cls  = r.vsModel>=0 ? 'warn' : 'neg';
+      const vLabel = r.verdict?.label || 'unknown';
+      return `
+      <tr class="clickable" data-pid="${r.player_id}" data-season="${r.season}">
+        <td><span class="rank">${i+1}</span></td>
+        <td><div class="photo-cell"><img src="${img}" loading="lazy" onerror="this.onerror=null;this.src='./placeholder.webp'">${escapeHtml(r.player)}</div></td>
+        <td>${escapeHtml(r.club||'—')}</td>
+        <td>${r.season}</td>
+        <td class="num">${fmt(r.actual, unit)}</td>
+        <td class="num">${fmt(r.pred, unit)}</td>
+        <td class="num ${cls}">${sign}${(r.vsModel*100).toFixed(0)}%</td>
+        <td><span class="vchip v-${vLabel}">${vLabel}</span></td>
+        <td class="num">${Math.abs(r.z).toFixed(2)}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  `;
+  for (const tr of tbl.querySelectorAll('tr[data-pid]')) {
+    tr.onclick = () => { selectPlayerKey(Number(tr.dataset.pid), tr.dataset.season); switchView('players'); };
+  }
+}
+
+function switchView(view) {
+  state.view = view;
+  for (const b of document.querySelectorAll('#nav button')) b.classList.toggle('active', b.dataset.view===view);
+  for (const v of document.querySelectorAll('.view')) v.classList.toggle('active', v.id === `view-${view}`);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ---------- Dedicated mispricing views ---------- */
+function renderMispricing(side) {
+  const target = document.getElementById('target').value;
+  const unit = target === 'value' ? '€' : '£';
+  let rows = allScoredRows(target);
+  rows = rows.filter(r => side==='underpays' ? r.vsModel<0 : r.vsModel>0);
+  if (state.misp.positions.size) rows = rows.filter(r => r.position && state.misp.positions.has(r.position));
+  if (state.misp.seasons.size)   rows = rows.filter(r => state.misp.seasons.has(r.season));
+  rows.sort((a,b)=>Math.abs(b.z)-Math.abs(a.z));
+
+  const idPrefix = side==='underpays' ? 'under' : 'over';
+  document.getElementById(idPrefix+'-count').textContent = `${rows.length} player${rows.length===1?'':'s'} match the current filters.`;
+
+  // Chart
+  const canvas = document.getElementById(idPrefix+'-chart');
+  if (state.charts[idPrefix]) state.charts[idPrefix].destroy();
+  const top = rows.slice(0, 15);
+  state.charts[idPrefix] = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: top.map(r=>r.player),
+      datasets: [{
+        data: top.map(r=>Math.abs(r.vsModel*100)),
+        backgroundColor: side==='underpays' ? '#f24b74cc' : '#e9a21bcc',
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis:'y', maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.parsed.x.toFixed(1)+'% ' + (side==='underpays'?'below model':'above model')}}},
+      scales:{
+        x:{ grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10},callback:v=>v+'%'} },
+        y:{ grid:{display:false}, ticks:{color:'#4c535e',font:{size:11}} }
+      }
+    }
+  });
+
+  renderMispTable(idPrefix+'-table', rows.slice(0,200), unit, {});
+}
+
+/* ---------- Insights view ---------- */
+function renderInsights() {
+  const target = document.getElementById('target').value;
+  const feats = state.meta.targets[target]?.features || [];
+  document.getElementById('kpi-nfeat').textContent = feats.length;
+  const top = state.meta.targets[target]?.shap_global_top15 || [];
+  const canvas = document.getElementById('feat-chart');
+  if (state.charts.feat) state.charts.feat.destroy();
+  state.charts.feat = new Chart(canvas, {
+    type:'bar',
+    data:{
+      labels: top.map(t=>t.feature),
+      datasets:[{ data: top.map(t=>t.mean_abs_shap), backgroundColor:'#4c84e8cc', borderRadius:4 }]
+    },
+    options:{
+      indexAxis:'y', maintainAspectRatio:false,
+      plugins:{ legend:{display:false} },
+      scales:{
+        x:{ grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10}} },
+        y:{ grid:{display:false}, ticks:{color:'#4c535e',font:{size:11}} }
+      }
+    }
+  });
+}
+
+/* ---------- Search ---------- */
+function setupSearch() {
+  const box = document.getElementById('searchbox');
+  const dl = document.getElementById('player-list');
+  dl.innerHTML = '';
+  const nameToPlayer = new Map();
+  for (const [, latest] of state.byPlayerLatest) nameToPlayer.set((latest.player||'').toLowerCase(), latest);
+  for (const latest of state.byPlayerLatest.values()) {
+    const opt = document.createElement('option');
+    opt.value = latest.player;
+    opt.label = `${latest.club || ''} · ${latest.position || ''}`;
+    dl.appendChild(opt);
+  }
+  function tryPick() {
+    const q = box.value.trim().toLowerCase(); if (!q) return;
+    const hit = nameToPlayer.get(q) || Array.from(nameToPlayer.values()).find(r => (r.player||'').toLowerCase().startsWith(q));
+    if (hit) { selectPlayerKey(hit.player_id); switchView('players'); }
+  }
+  box.addEventListener('input',   () => tryPick());
+  box.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); tryPick(); } });
+}
+
+function selectPlayerKey(player_id, preferSeason) {
+  const target = document.getElementById('target').value;
+  const snap = document.getElementById('snapshot').value;
+  const candidates = [preferSeason, document.getElementById('season').value, '2025-26', '2024-25', '2023-24'];
+  let want = null;
+  for (const s of candidates) {
+    if (!s) continue;
+    const row = state.byKey.get(`${player_id}|${s}|${snap}`)
+             || state.byKey.get(`${player_id}|${s}|end`)
+             || state.byKey.get(`${player_id}|${s}|start`);
+    if (row && row[target] && row[target].predicted != null) { want = row; break; }
+  }
+  if (!want) want = state.byKey.get(`${player_id}|${document.getElementById('season').value}|${snap}`) || state.byPlayerLatest.get(player_id);
+  if (!want) return;
+  state.current = want;
+  if (want.season !== document.getElementById('season').value) document.getElementById('season').value = want.season;
+  if (want.snapshot !== document.getElementById('snapshot').value) document.getElementById('snapshot').value = want.snapshot;
+  renderPlayer(want);
+}
+
+/* ---------- Player detail ---------- */
+function renderPlayer(row) {
+  const target = document.getElementById('target').value;
+  const unit = target === 'value' ? '€' : '£';
+  const t = row[target]; const bio = row.bio || {};
+  const image = bio.image_url || './placeholder.webp';
+  const age = row.age ? row.age.toFixed(1) : '—';
+  const verdict = t?.verdict;
+  const vLabel = verdict?.label || 'unknown';
+
+  const widthRel = (t && t.lower != null && t.upper != null && t.predicted)
+    ? (t.upper - t.lower) / t.predicted : null;
+  let confLabel = 'Unknown', confColor = '#4b5563', confHint = '';
+  if (widthRel != null) {
+    if (widthRel < 1.0)      { confLabel = 'High';     confColor = '#166534'; confHint = 'Model is reasonably sure about this one.'; }
+    else if (widthRel < 2.0) { confLabel = 'Moderate'; confColor = '#b45309'; confHint = 'Treat as a ballpark; comparable players vary.'; }
+    else                     { confLabel = 'Low';      confColor = '#991b1b'; confHint = 'Model has little conviction here — thin-stats player.'; }
+  }
+
+  const vsModel = (t && t.actual != null && t.predicted != null) ? (t.actual - t.predicted) / t.predicted : null;
+  const absPct = vsModel != null ? Math.abs(vsModel*100) : null;
+  let summary = '';
+  if (vsModel == null) summary = 'No market value on record — model prediction only.';
+  else if (absPct <= 20) summary = `Market and model agree within ${absPct.toFixed(0)}%. Nothing unusual.`;
+  else if (widthRel && widthRel > 2.0) summary = `Market is ${absPct.toFixed(0)}% ${vsModel<0?'below':'above'} the model, but confidence is low — the gap is probably noise.`;
+  else if (vsModel < 0) summary = `Market pays ${absPct.toFixed(0)}% less than the model. Investigate: injury, out-of-favour, contract leverage, or a signal the model cannot see.`;
+  else summary = `Market pays ${absPct.toFixed(0)}% more than the model. Investigate: hype premium, manager demand, youth potential, or tactical fit.`;
+
+  document.getElementById('player-detail').innerHTML = `
+    <div class="player-header">
+      <img src="${image}" alt="${escapeHtml(row.player)}" loading="lazy" onerror="this.onerror=null;this.src='./placeholder.webp'">
+      <div>
+        <h1>${escapeHtml(row.player)}</h1>
+        <div class="subtitle">
+          <span class="pill">${escapeHtml(bio.sub_position || row.position || '—')}</span>
+          <span class="pill">${escapeHtml(row.club || '—')}</span>
+          <span class="pill">${escapeHtml(bio.country_of_citizenship || '—')}</span>
+          <span class="pill">${age} yrs</span>
+          <span class="pill">${row.season} · ${row.snapshot}</span>
+        </div>
+      </div>
+      <div class="verdict-stack">
+        <span class="vchip v-${vLabel}">${vLabel}</span>
+        ${verdict ? `<span class="vchip v-unknown">${verdict.within_interval ? 'inside interval' : 'outside interval'}</span>` : ''}
+      </div>
+    </div>
+
+    ${t && t.predicted != null ? `
+    <div class="grid-3 mt">
+      <div class="panel panel-pad">
+        <div class="metric-label">Model predicts</div>
+        <div class="metric-value" style="font-size:24px;margin-top:4px">${fmtFull(t.predicted, unit)}</div>
+      </div>
+      <div class="panel panel-pad">
+        <div class="metric-label">Actual (Transfermarkt)</div>
+        <div class="metric-value" style="font-size:24px;margin-top:4px">${fmtFull(t.actual, unit)}</div>
+        ${vsModel != null ? `<div style="font-size:11px;color:${vsModel>=0?'var(--amber)':'var(--red)'};margin-top:4px">${vsModel>=0?'+':''}${(vsModel*100).toFixed(1)}% vs model</div>` : ''}
+      </div>
+      <div class="panel panel-pad">
+        <div class="metric-label">Confidence</div>
+        <div class="metric-value" style="font-size:24px;margin-top:4px;color:${confColor}">${confLabel}</div>
+        <div style="font-size:11px;color:#8b919b;margin-top:4px">${confHint}</div>
+      </div>
+    </div>
+    <div style="color:#656c77;font-size:12px;margin:10px 2px 0">${summary}</div>
+    ` : `
+    <div class="panel panel-pad mt" style="border-style:dashed;background:#fafbfc">
+      <strong>No model prediction for this season.</strong>
+      <div style="color:#8b919b;font-size:11px;margin-top:4px">Predictions are scored only on the 2025-26 holdout.</div>
+    </div>`}
+
+    <div class="grid-2 mt">
+      <div class="panel panel-pad">
+        <div class="panel-head"><div class="panel-title">Player info</div><button class="more">⋮</button></div>
+        <table>
+          <tr><th>Full name</th><td>${escapeHtml(bio.full_name || row.player)}</td></tr>
+          <tr><th>Date of birth</th><td>${bio.date_of_birth || '—'}</td></tr>
+          <tr><th>Nationality</th><td>${escapeHtml(bio.country_of_citizenship || '—')}</td></tr>
+          <tr><th>Born in</th><td>${escapeHtml(bio.country_of_birth || '—')}</td></tr>
+          <tr><th>Position</th><td>${escapeHtml(bio.sub_position || row.position || '—')}</td></tr>
+          <tr><th>Foot</th><td>${escapeHtml(bio.foot || '—')}</td></tr>
+          <tr><th>Height</th><td>${bio.height_cm ? bio.height_cm+' cm' : '—'}</td></tr>
+          <tr><th>Current club</th><td>${escapeHtml(bio.current_club || row.club || '—')}</td></tr>
+          <tr><th>Contract until</th><td>${bio.contract_expiration_date || '—'}</td></tr>
+          <tr><th>Int'l caps</th><td>${bio.international_caps ?? '—'} (${bio.international_goals ?? 0} goals)</td></tr>
+          <tr><th>Agent</th><td>${escapeHtml(bio.agent_name || '—')}</td></tr>
+          <tr><th>TM current value</th><td>${fmtFull(bio.tm_current_market_value_eur, '€')}</td></tr>
+          <tr><th>TM highest ever</th><td>${fmtFull(bio.tm_highest_market_value_eur, '€')}</td></tr>
+        </table>
+      </div>
+      <div class="panel panel-pad">
+        <div class="panel-head"><div class="panel-title">Why the model predicts this</div><button class="more">⋮</button></div>
+        <div id="player-shap"></div>
+      </div>
+    </div>
+
+    ${row.value_trajectory?.length ? `
+    <div class="panel panel-pad mt chart-panel" style="min-height:300px">
+      <div class="panel-head"><div class="panel-title">Market value over time (Transfermarkt)</div><button class="more">⋮</button></div>
+      <div class="chart-wrap"><canvas id="val-traj-chart"></canvas></div>
+    </div>` : ''}
+
+    ${row.season_stats?.length ? `
+    <div class="panel panel-pad mt chart-panel" style="min-height:300px">
+      <div class="panel-head"><div class="panel-title">Season by season</div><button class="more">⋮</button></div>
+      <div class="chart-wrap"><canvas id="stats-chart"></canvas></div>
+    </div>` : ''}
+
+    <div class="panel mt">
+      <div class="panel-head" style="padding:17px 18px 0;margin-bottom:0"><div class="panel-title">Career moves</div><button class="more" style="margin-right:14px">⋮</button></div>
+      <div class="table-wrap" style="padding:12px 0 4px">
+        <table>
+          <thead><tr><th style="padding-left:18px">Date</th><th>From</th><th>To</th><th class="num" style="padding-right:18px">Fee</th></tr></thead>
+          <tbody>
+          ${(row.career || []).slice().reverse().slice(0, 12).map(c =>
+            `<tr><td style="padding-left:18px">${c.date||'—'}</td><td>${escapeHtml(c.from_club||'')}</td><td>${escapeHtml(c.to_club||'')}</td><td class="num" style="padding-right:18px">${c.fee_eur ? fmt(c.fee_eur,'€') : '—'}</td></tr>`
+          ).join('') || '<tr><td colspan="4" style="padding:20px;text-align:center;color:#8b919b">No career data</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  // SHAP bars (positive right, negative left, centred at 0)
+  const shapEl = document.getElementById('player-shap');
+  const top = (t?.shap_top) || [];
+  const maxAbs = Math.max(...top.map(s=>Math.abs(s.contribution_log)), 0.01);
+  shapEl.innerHTML = top.map(s => {
+    const w = Math.abs(s.contribution_log) / maxAbs * 46;
+    const isPos = s.contribution_log >= 0;
+    return `
+      <div class="shap-item">
+        <div class="f">${s.feature}</div>
+        <div class="v">${isPos?'+':''}${s.contribution_log.toFixed(2)}</div>
+        <div class="bar"><span style="background:${isPos?'#16c767':'#f24b74'};${isPos?'left:50%':`right:50%;left:auto;transform-origin:right`};width:${w}%"></span></div>
+      </div>`;
+  }).join('') || '<div style="color:#8b919b;padding:14px">No prediction for this row</div>';
+
+  if (row.value_trajectory?.length) drawValueTrajectory(row.value_trajectory);
+  if (row.season_stats?.length) drawSeasonStats(row.season_stats);
+}
+
+function drawValueTrajectory(points) {
+  const canvas = document.getElementById('val-traj-chart'); if (!canvas) return;
+  if (state.charts['val-traj']) state.charts['val-traj'].destroy();
+  state.charts['val-traj'] = new Chart(canvas, {
+    type:'line',
+    data:{ labels: points.map(p=>p.date), datasets:[{ label:'TM market value (€)', data: points.map(p=>p.market_value_eur), borderColor:'#37003c', backgroundColor:'#37003c22', fill:true, tension:0.25, pointRadius:2 }]},
+    options:{ maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>'€'+ctx.parsed.y.toLocaleString('en-US')}}},
+      scales:{
+        x:{ grid:{display:false}, ticks:{color:'#8b919b',font:{size:10}} },
+        y:{ grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10},callback:v=>'€'+(v/1_000_000).toFixed(0)+'M'} }
+      }
+    }
+  });
+}
+
+function drawSeasonStats(stats) {
+  const canvas = document.getElementById('stats-chart'); if (!canvas) return;
+  if (state.charts['stats']) state.charts['stats'].destroy();
+  const recent = stats.slice(-10);
+  state.charts['stats'] = new Chart(canvas, {
+    data:{
+      labels: recent.map(s=>s.season),
+      datasets:[
+        { type:'bar',  label:'Goals',   data: recent.map(s=>s.goals),   backgroundColor:'#16c767cc', yAxisID:'y' },
+        { type:'bar',  label:'Assists', data: recent.map(s=>s.assists), backgroundColor:'#4c84e8cc', yAxisID:'y' },
+        { type:'line', label:'Minutes', data: recent.map(s=>s.minutes), borderColor:'#171a20', backgroundColor:'transparent', yAxisID:'y1', tension:0.3, pointRadius:2.5 },
+      ]
+    },
+    options:{ maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom', labels:{color:'#4c535e',font:{size:11}}}},
+      scales:{
+        x:{ grid:{display:false}, ticks:{color:'#8b919b',font:{size:10}} },
+        y:{ position:'left', title:{display:true,text:'G / A',color:'#8b919b',font:{size:10}}, grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10}}},
+        y1:{position:'right', title:{display:true,text:'Minutes',color:'#8b919b',font:{size:10}}, grid:{drawOnChartArea:false}, ticks:{color:'#8b919b',font:{size:10}}}
+      }
+    }
+  });
+}
+
+boot().catch(e => { document.body.innerHTML = '<p style="color:red;padding:2rem">'+e+'</p>'; });
+</script>
+</body>
+</html>

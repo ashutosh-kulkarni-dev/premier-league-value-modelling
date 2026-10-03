@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "value-wage-model"
+version = "0.1.0"
+description = "Premier League player market-value and wage model with mispricing analysis."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Ashutosh Bhasin", email = "ashutosh.bhas@gmail.com" }]
+dependencies = [
+  "pandas>=2.2",
+  "numpy>=1.26,<2.3",
+  "pyarrow>=17",
+  "scikit-learn>=1.5",
+  "lightgbm>=4.3",
+  "xgboost>=2.1",
+  "catboost>=1.2",
+  "optuna>=3.6",
+  "shap>=0.46",
+  "pandera>=0.20",
+  "mlflow>=2.16",
+  "streamlit>=1.38",
+  "mapie>=0.9",
+  "plotly>=5.24",
+  "matplotlib>=3.9",
+  "seaborn>=0.13",
+  "pydantic>=2.8",
+  "pydantic-settings>=2.4",
+  "pyyaml>=6.0",
+  "typer>=0.12",
+  "rich>=13.7",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "hypothesis>=6.112", "ruff>=0.6", "mypy>=1.11"]
+
+[project.scripts]
+vw = "value_wage.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+# N803/N806: `X` is the sklearn convention for the feature matrix — exempted project-wide.
+# B008: typer.Option in function defaults is the typer idiom.
+# RUF001/002/003: unicode minus/times/en-dash are deliberate in human-facing strings and docs.
+# RUF059: unused tuple elements from bootstrap are kept for readability.
+ignore = ["E501", "N803", "N806", "B008", "RUF001", "RUF002", "RUF003", "RUF059"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["N802", "N803"]
+"notebooks/**" = ["F401", "F841"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src/value_wage"]
+plugins = []
+disallow_untyped_decorators = false
+warn_unused_ignores = false
+
+[[tool.mypy.overrides]]
+module = ["lightgbm.*", "xgboost.*", "catboost.*", "shap.*", "mapie.*", "pandera.*", "optuna.*", "mlflow.*", "sklearn.*", "seaborn.*", "plotly.*", "streamlit.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]

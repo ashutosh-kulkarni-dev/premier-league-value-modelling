@@ -1,0 +1,7 @@
+target,model,cv_log_mae,trials
+value,lgbm,0.5129,30
+value,xgb,0.5153,25
+value,hgbr,0.527,22
+wage,lgbm,0.3617,27
+wage,xgb,0.3642,20
+wage,hgbr,0.3687,20

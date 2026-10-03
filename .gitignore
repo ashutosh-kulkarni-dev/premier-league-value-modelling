@@ -1,0 +1,49 @@
+# ============================================================
+#  Python / env
+# ============================================================
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+
+# ============================================================
+#  Caches
+# ============================================================
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ============================================================
+#  OS / editor
+# ============================================================
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ============================================================
+#  Dataset: Transfermarkt Kaggle dump is large (~1 GB) and
+#  users should re-download it themselves from
+#  https://www.kaggle.com/datasets/davidcariboo/player-scores
+# ============================================================
+data/raw/transfermarkt/*
+!data/raw/transfermarkt/.gitkeep
+
+# ============================================================
+#  Experiment tracking (reproducible; not shipped)
+# ============================================================
+mlruns/
+optuna.db
+optuna.db-journal
+
+# ============================================================
+#  Temp / scratch
+# ============================================================
+logs/
+*.log
+*.tmp

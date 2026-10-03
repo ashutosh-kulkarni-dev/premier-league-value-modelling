@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" role="img" aria-label="Player photo unavailable">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2b2f36"/>
+      <stop offset="100%" stop-color="#20242b"/>
+    </linearGradient>
+    <linearGradient id="figure" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#a9b0bb"/>
+      <stop offset="100%" stop-color="#7a828e"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8d95a0"/>
+      <stop offset="100%" stop-color="#6b7380"/>
+    </linearGradient>
+    <linearGradient id="shirt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a3f48"/>
+      <stop offset="100%" stop-color="#2d323a"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="300" height="300" rx="30" ry="30" fill="url(#bg)"/>
+
+  <!-- Shoulders / torso (behind) -->
+  <path d="M30 300
+           C30 236, 75 196, 150 196
+           C225 196, 270 236, 270 300
+           Z"
+        fill="url(#shirt)"/>
+
+  <!-- Collar / inner neckline hint -->
+  <path d="M118 215
+           C128 230, 140 236, 150 236
+           C160 236, 172 230, 182 215
+           C170 220, 160 222, 150 222
+           C140 222, 130 220, 118 215 Z"
+        fill="url(#figure)" opacity="0.55"/>
+
+  <!-- Head -->
+  <ellipse cx="150" cy="120" rx="48" ry="54" fill="url(#figure)"/>
+
+  <!-- Hair: a rough spiky crown sitting on top of the head -->
+  <path d="M101 92
+           C100 68, 118 50, 150 48
+           C182 50, 200 68, 199 92
+           C197 100, 193 103, 192 103
+           L190 92
+           L182 100
+           L177 86
+           L168 98
+           L161 83
+           L155 97
+           L148 82
+           L141 97
+           L134 83
+           L127 98
+           L120 86
+           L115 99
+           L109 90
+           L108 103
+           C106 101, 102 100, 101 92 Z"
+        fill="url(#hair)"/>
+
+  <!-- Hair shadow softening against head -->
+  <path d="M108 100
+           C120 94, 180 94, 192 100
+           C185 108, 165 112, 150 112
+           C135 112, 115 108, 108 100 Z"
+        fill="#5d6471" opacity="0.4"/>
+</svg>

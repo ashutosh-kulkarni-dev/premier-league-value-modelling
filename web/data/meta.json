@@ -1,0 +1,270 @@
+{
+  "targets": {
+    "value": {
+      "model": "lgbm",
+      "metrics": {
+        "target": "value",
+        "model": "lgbm",
+        "nominal_coverage": 0.8,
+        "achieved_coverage": 0.8957,
+        "mean_interval_width_log": 1.6456,
+        "median_interval_width_log": 1.6286,
+        "point_mae_log": 0.3981,
+        "point_r2_log": 0.7817,
+        "point_spearman": 0.8755,
+        "n_test": 978,
+        "note": "Point model trained on TRAIN SEASON ONLY (not train+val) so val could be held out for conformal calibration. Metrics therefore differ slightly from `evaluate run`."
+      },
+      "shap_global_top15": [
+        {
+          "feature": "age",
+          "mean_abs_shap": 0.24454226478113356
+        },
+        {
+          "feature": "potential",
+          "mean_abs_shap": 0.24364242524356455
+        },
+        {
+          "feature": "current_ability",
+          "mean_abs_shap": 0.23043516283864482
+        },
+        {
+          "feature": "age_sq",
+          "mean_abs_shap": 0.09752154393928962
+        },
+        {
+          "feature": "minutes",
+          "mean_abs_shap": 0.08263989286286194
+        },
+        {
+          "feature": "xg_chain_p90",
+          "mean_abs_shap": 0.06923994169300664
+        },
+        {
+          "feature": "matches",
+          "mean_abs_shap": 0.04812912684486495
+        },
+        {
+          "feature": "fm_technical_mean",
+          "mean_abs_shap": 0.0380957915547825
+        },
+        {
+          "feature": "fm_physical_mean",
+          "mean_abs_shap": 0.034691509544074614
+        },
+        {
+          "feature": "xg_buildup_p90",
+          "mean_abs_shap": 0.03428465548812181
+        },
+        {
+          "feature": "log1p_goals",
+          "mean_abs_shap": 0.03361293556756394
+        },
+        {
+          "feature": "log1p_minutes",
+          "mean_abs_shap": 0.03183718080553987
+        },
+        {
+          "feature": "months_to_contract_end",
+          "mean_abs_shap": 0.029685026693375163
+        },
+        {
+          "feature": "key_passes_p90",
+          "mean_abs_shap": 0.02567290286791598
+        },
+        {
+          "feature": "log1p_assists",
+          "mean_abs_shap": 0.022497609869046354
+        }
+      ],
+      "features": [
+        "age",
+        "age_sq",
+        "height_cm",
+        "weak_foot",
+        "minutes",
+        "matches",
+        "log1p_minutes",
+        "np_xg_p90",
+        "xa_p90",
+        "key_passes_p90",
+        "xg_chain_p90",
+        "xg_buildup_p90",
+        "shots_p90",
+        "log1p_goals",
+        "log1p_assists",
+        "crossing",
+        "dribbling",
+        "finishing",
+        "first_touch",
+        "heading",
+        "long_shots",
+        "marking",
+        "passing",
+        "tackling",
+        "technique",
+        "aggression",
+        "anticipation",
+        "bravery",
+        "composure",
+        "concentration",
+        "decisions",
+        "determination",
+        "flair",
+        "leadership",
+        "off_the_ball",
+        "positioning",
+        "teamwork",
+        "vision",
+        "work_rate",
+        "acceleration",
+        "pace",
+        "stamina",
+        "strength",
+        "jumping_reach",
+        "current_ability",
+        "potential",
+        "potential_gap",
+        "fm_technical_mean",
+        "fm_mental_mean",
+        "fm_physical_mean",
+        "months_to_contract_end",
+        "primary_position",
+        "foot"
+      ]
+    },
+    "wage": {
+      "model": "lgbm",
+      "metrics": {
+        "target": "wage",
+        "model": "lgbm",
+        "nominal_coverage": 0.8,
+        "achieved_coverage": 0.9038,
+        "mean_interval_width_log": 1.118,
+        "median_interval_width_log": 1.0861,
+        "point_mae_log": 0.257,
+        "point_r2_log": 0.8578,
+        "point_spearman": 0.9411,
+        "n_test": 1008,
+        "note": "Point model trained on TRAIN SEASON ONLY (not train+val) so val could be held out for conformal calibration. Metrics therefore differ slightly from `evaluate run`."
+      },
+      "shap_global_top15": [
+        {
+          "feature": "current_ability",
+          "mean_abs_shap": 0.25239480633652656
+        },
+        {
+          "feature": "potential",
+          "mean_abs_shap": 0.16705854056323696
+        },
+        {
+          "feature": "age",
+          "mean_abs_shap": 0.09497673460688041
+        },
+        {
+          "feature": "minutes",
+          "mean_abs_shap": 0.07480949408088226
+        },
+        {
+          "feature": "months_to_contract_end",
+          "mean_abs_shap": 0.0650138151940865
+        },
+        {
+          "feature": "potential_gap",
+          "mean_abs_shap": 0.03649929829609727
+        },
+        {
+          "feature": "age_sq",
+          "mean_abs_shap": 0.03425996204515612
+        },
+        {
+          "feature": "fm_physical_mean",
+          "mean_abs_shap": 0.03343043103389004
+        },
+        {
+          "feature": "fm_technical_mean",
+          "mean_abs_shap": 0.03336619647757772
+        },
+        {
+          "feature": "fm_mental_mean",
+          "mean_abs_shap": 0.023141459194889913
+        },
+        {
+          "feature": "pace",
+          "mean_abs_shap": 0.02157849722869801
+        },
+        {
+          "feature": "stamina",
+          "mean_abs_shap": 0.02080977854544556
+        },
+        {
+          "feature": "long_shots",
+          "mean_abs_shap": 0.01797355812879604
+        },
+        {
+          "feature": "heading",
+          "mean_abs_shap": 0.016006027138892133
+        },
+        {
+          "feature": "determination",
+          "mean_abs_shap": 0.01546679954685163
+        }
+      ],
+      "features": [
+        "age",
+        "age_sq",
+        "height_cm",
+        "weak_foot",
+        "minutes",
+        "matches",
+        "log1p_minutes",
+        "np_xg_p90",
+        "xa_p90",
+        "key_passes_p90",
+        "xg_chain_p90",
+        "xg_buildup_p90",
+        "shots_p90",
+        "log1p_goals",
+        "log1p_assists",
+        "crossing",
+        "dribbling",
+        "finishing",
+        "first_touch",
+        "heading",
+        "long_shots",
+        "marking",
+        "passing",
+        "tackling",
+        "technique",
+        "aggression",
+        "anticipation",
+        "bravery",
+        "composure",
+        "concentration",
+        "decisions",
+        "determination",
+        "flair",
+        "leadership",
+        "off_the_ball",
+        "positioning",
+        "teamwork",
+        "vision",
+        "work_rate",
+        "acceleration",
+        "pace",
+        "stamina",
+        "strength",
+        "jumping_reach",
+        "current_ability",
+        "potential",
+        "potential_gap",
+        "fm_technical_mean",
+        "fm_mental_mean",
+        "fm_physical_mean",
+        "months_to_contract_end",
+        "primary_position",
+        "foot"
+      ]
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "target": "value",
+  "model": "hgbr",
+  "n_test": 476,
+  "mae_log": 0.2193,
+  "mae_log_ci": "[0.1877, 0.2564]",
+  "r2_log": 0.8544,
+  "r2_log_ci": "[0.8008, 0.8994]",
+  "spearman": 0.9617,
+  "median_abs_pct_error": 0.0776,
+  "interval_coverage_80": 0.6008
+}

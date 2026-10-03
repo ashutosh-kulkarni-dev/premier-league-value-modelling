@@ -1,0 +1,5 @@
+target,model,mae_log,r2_log,spearman
+value,position_median,0.8441,-0.0083,0.215
+value,ridge,0.4635,0.7218,0.8407
+wage,position_median,0.7577,-0.0549,0.114
+wage,ridge,0.364,0.7924,0.8688
