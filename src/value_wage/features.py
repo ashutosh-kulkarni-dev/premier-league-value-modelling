@@ -9,6 +9,7 @@ model-ready frame described in config/features.yaml.
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Final
 
@@ -21,14 +22,20 @@ from value_wage.config import FeatureLists, Settings, get_settings
 # Order matters: the first bucket whose code appears in the player's position list wins.
 # Rationale: a player listed "DC,DM,MC" is primarily a CB; "AMR,MR" is primarily a winger.
 POSITION_BUCKETS: Final[tuple[tuple[str, tuple[str, ...]], ...]] = (
-    ("GK", ("GK",)),
-    ("CB", ("DC",)),
-    ("FB", ("DL", "DR", "WBL", "WBR")),
+    # FM full codes (DC, AMC, …) and the FM Inside short codes (D, M, F, S, …).
+    # Order sets priority — a player listed "DC,DM,MC" is primarily a CB.
+    # Single-letter codes map to their natural centre of mass:
+    #   D → CB, M → CM, AM → AM, F/S → ST, WB → FB. Duty letters (S/D/A)
+    #   paired with other position tokens lose to the earlier bucket anyway
+    #   (e.g. "D S" matches CB via D before S can route to ST).
+    ("GK", ("GK", "G")),
+    ("CB", ("DC", "D")),
+    ("FB", ("DL", "DR", "WBL", "WBR", "WB")),
     ("DM", ("DM",)),
-    ("CM", ("MC",)),
-    ("W", ("AML", "AMR", "ML", "MR")),
-    ("AM", ("AMC",)),
-    ("ST", ("ST",)),
+    ("CM", ("MC", "M")),
+    ("W", ("AML", "AMR", "ML", "MR", "W")),
+    ("AM", ("AMC", "AM")),
+    ("ST", ("ST", "F", "S")),
 )
 
 FM_TECHNICAL: Final[tuple[str, ...]] = (
@@ -59,7 +66,9 @@ def parse_primary_position(positions: pd.Series) -> pd.Series:
         s = str(raw).strip()
         if not s:
             return None
-        codes = {code.strip() for code in s.split(",") if code.strip()}
+        # Accept both FM's comma-separated form ("DC,DM,MC") and FMInside's
+        # space-separated short form ("D M S", "F S").
+        codes = {code.strip() for code in re.split(r"[,\s]+", s) if code.strip()}
         for bucket, members in POSITION_BUCKETS:
             if codes & set(members):
                 return bucket

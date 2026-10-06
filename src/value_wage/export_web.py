@@ -24,7 +24,7 @@ import pandas as pd
 import shap
 
 from value_wage.config import ALL_TARGETS, Settings, TARGET_COLUMN, get_settings
-from value_wage.features import feature_lists_for
+from value_wage.features import feature_lists_for, parse_primary_position
 from value_wage.splits import make_splits
 from value_wage.train import TrainedArtifact, _normalize_na
 
@@ -323,6 +323,19 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
             pass
         return x
 
+    def _canonical_position(primary: Any, raw: Any) -> Any:
+        # Prefer the already-bucketed value; otherwise re-run the classifier on
+        # the raw position string so FMInside short codes ("D S", "F M S", …)
+        # don't leak through as un-filterable labels in the UI.
+        primary = _safe(primary)
+        if primary:
+            return primary
+        raw = _safe(raw)
+        if raw is None:
+            return None
+        bucketed = parse_primary_position(pd.Series([raw])).iloc[0]
+        return bucketed if pd.notna(bucketed) else raw
+
     for _, r in features[identity_cols].iterrows():
         pid = int(r["player_id"])
         key = (pid, r["season"], _safe(r.get("snapshot")) or "end")
@@ -335,7 +348,7 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
                 "season": r["season"],
                 "snapshot": _safe(r.get("snapshot")) or "end",
                 "club": _safe(r.get("club")) or _safe(r.get("team")),
-                "position": _safe(r.get("primary_position")) or _safe(r.get("position")),
+                "position": _canonical_position(r.get("primary_position"), r.get("position")),
                 "age": None if pd.isna(r.get("age")) else float(r["age"]),
                 "minutes": None if pd.isna(r.get("minutes")) else int(r["minutes"]),
                 "bio": bio_by_tm.get(tm_id) if tm_id else None,
