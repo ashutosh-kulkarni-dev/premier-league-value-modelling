@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>PL Insight — Value &amp; Wage Model</title>
+<link rel="icon" type="image/webp" href="./assets/premier-league-logo.webp">
+<link rel="apple-touch-icon" href="./assets/premier-league-logo.webp">
+<meta name="theme-color" content="#37003c">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -26,8 +29,7 @@
   /* ==== Topbar ==== */
   .topbar{height:59px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;gap:26px;position:sticky;top:0;z-index:10}
   .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;min-width:150px}
-  .brand-mark{width:34px;height:34px;border-radius:7px;background:linear-gradient(135deg,var(--pl-purple),var(--pl-purple-2));display:grid;place-items:center}
-  .brand-mark svg{width:28px;height:28px}
+  .brand-mark{width:38px;height:38px;object-fit:contain;display:block}
   .brand .brand-name{letter-spacing:-0.01em}
   .nav{display:flex;align-items:stretch;height:100%;gap:25px}
   .nav button{position:relative;color:#747987;padding:0 2px;font-weight:500}
@@ -68,12 +70,6 @@
   .metric-note{color:#1ac467;font-size:11px;margin-left:5px}
   .metric-note.red{color:#d33d3d}
   .metric-sub{font-size:11px;color:#8b919c;margin-top:5px}
-  .bars{height:30px;margin-top:11px;display:flex;align-items:end;gap:3px}
-  .bars i{display:block;width:4px;border-radius:2px 2px 0 0;background:var(--green)}
-  .bars i.alt{background:var(--yellow)}
-  .rate-track{height:7px;border-radius:6px;margin-top:17px;background:linear-gradient(90deg,#f9b317 0%,#ddea39 42%,#15c96a 75%,#e5e7eb 75%);position:relative}
-  .spark{height:36px;margin-top:8px;position:relative}
-  .spark svg{width:100%;height:100%;overflow:visible}
   .pct-bars{height:7px;border-radius:4px;background:#edf0f3;display:flex;overflow:hidden;margin-top:14px}
   .pct-bars span{display:block;height:100%}
 
@@ -92,6 +88,38 @@
   .chip:hover{background:#fafbfc}
   .chip.active{background:#151b2b;color:#fff;border-color:#151b2b}
   .group-label{font-size:11px;color:#8b919b;margin-right:4px}
+
+  /* ==== Filter card ==== */
+  .filter-card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:14px 16px;margin-bottom:14px}
+  .filter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 14px}
+  .filter-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .filter-field label{font-size:10px;font-weight:600;color:#4c535e;text-transform:uppercase;letter-spacing:.04em}
+  .filter-field input,.filter-field select,.filter-field .ms-btn{height:34px;border:1px solid var(--line);border-radius:7px;background:#fff;padding:0 10px;font-size:12px;color:var(--text);width:100%}
+  .filter-field input::placeholder{color:#9aa0ab}
+  .filter-field input:focus,.filter-field select:focus,.filter-field .ms-btn:focus{outline:none;border-color:#4c84e8;box-shadow:0 0 0 2px rgba(76,132,232,.12)}
+  .filter-actions{grid-column:4 / 5;display:flex;align-items:flex-end;justify-content:flex-end;gap:12px}
+  .btn-primary{height:34px;padding:0 18px;border-radius:7px;background:#2563eb;color:#fff;font-weight:600;font-size:12px;border:0;cursor:pointer}
+  .btn-primary:hover{background:#1e51c7}
+  .link-btn{background:none;border:0;color:#2563eb;font-weight:500;font-size:12px;cursor:pointer;padding:0}
+  .link-btn:hover{text-decoration:underline}
+  .pl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#4c535e;cursor:pointer;user-select:none;margin-right:8px}
+  .pl-toggle input{width:14px;height:14px;margin:0;accent-color:#2563eb}
+
+  /* multi-select dropdown */
+  .ms{position:relative;width:100%}
+  .ms-btn{display:flex;align-items:center;justify-content:space-between;cursor:pointer;text-align:left;color:var(--text);gap:6px}
+  .ms-btn .ms-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#424851}
+  .ms-btn .ms-label.placeholder{color:#9aa0ab}
+  .ms-btn .ms-caret{color:#8b919b;flex:0 0 auto;transition:transform .15s}
+  .ms.open .ms-btn .ms-caret{transform:rotate(180deg)}
+  .ms-panel{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:7px;box-shadow:0 10px 24px rgba(15,23,42,.1);z-index:20;max-height:260px;overflow:auto;padding:4px 0;display:none}
+  .ms.open .ms-panel{display:block}
+  .ms-option{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;color:#424851;cursor:pointer;user-select:none}
+  .ms-option:hover{background:#f3f5f8}
+  .ms-option input{width:14px;height:14px;margin:0;accent-color:#2563eb}
+
+  @media (max-width:1000px){ .filter-grid{grid-template-columns:repeat(2,1fr)} .filter-actions{grid-column:1 / -1;justify-content:flex-start} }
+  @media (max-width:560px){ .filter-grid{grid-template-columns:1fr} }
 
   /* ==== Tables ==== */
   .search-row{display:flex;align-items:center;gap:12px;margin:0 18px 10px}
@@ -126,14 +154,27 @@
   .verdict-stack{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 
   /* ==== SHAP list ==== */
-  .shap-item{display:grid;grid-template-columns:120px 60px 1fr;gap:10px;align-items:center;padding:6px 0;font-size:12px}
+  .shap-item{display:grid;grid-template-columns:140px 60px 1fr;gap:10px;align-items:center;padding:6px 0;font-size:12px}
   .shap-item .f{color:#4c535e}
-  .shap-item .v{font-variant-numeric:tabular-nums;font-weight:500}
-  .shap-item .bar{height:8px;border-radius:3px;background:#f0f2f4;position:relative;overflow:hidden}
-  .shap-item .bar>span{position:absolute;top:0;bottom:0;left:50%;transform-origin:left}
+  .shap-item .v{font-variant-numeric:tabular-nums;font-weight:500;text-align:right}
+  .shap-item .v.pos{color:#166534}
+  .shap-item .v.neg{color:#991b1b}
+  .shap-item .bar{height:10px;border-radius:4px;background:#f4f6f8;position:relative}
+  .shap-item .bar::after{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:#d7dadf}
+  .shap-item .bar>span{position:absolute;top:0;bottom:0;border-radius:4px;max-width:50%}
+  .shap-item .bar>span.pos{left:50%;background:#16c767}
+  .shap-item .bar>span.neg{right:50%;background:#f24b74}
 
   /* ==== Insights-view tables ==== */
   .pill-chip{display:inline-block;padding:3px 8px;border-radius:999px;background:#f1f3f6;color:#4c535e;font-size:11px}
+
+  /* ==== How we validate cards ==== */
+  .validate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:2px}
+  .validate-card{background:#fafbfc;border:1px solid var(--line);border-radius:8px;padding:14px 16px}
+  .validate-title{font-size:12px;font-weight:600;color:#151922;margin-bottom:6px;letter-spacing:-.01em}
+  .validate-body{font-size:11.5px;line-height:1.55;color:#4c535e}
+  .validate-body code{background:#eef0f3;color:#2b3240;padding:1px 5px;border-radius:4px;font-size:11px}
+  @media(max-width:900px){ .validate-grid{grid-template-columns:1fr} }
 
   @media(max-width:1100px){
     .nav{gap:14px}.topbar{gap:15px}
@@ -158,27 +199,7 @@
 
 <header class="topbar">
   <div class="brand">
-    <div class="brand-mark" aria-hidden="true">
-      <!-- Stylised PL-style mark: crown over a lion silhouette -->
-      <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="plBg" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#ff2882"/>
-            <stop offset="100%" stop-color="#00ff85"/>
-          </linearGradient>
-        </defs>
-        <g fill="#fff">
-          <!-- Crown -->
-          <path d="M14 22 L20 14 L26 20 L32 10 L38 20 L44 14 L50 22 L48 28 L16 28 Z" />
-          <!-- Lion head (abstract) -->
-          <circle cx="32" cy="40" r="12" fill="url(#plBg)" />
-          <path d="M22 42 Q27 36 32 40 Q37 36 42 42 Q42 50 32 54 Q22 50 22 42 Z" fill="#fff"/>
-          <circle cx="28" cy="44" r="1.8" fill="#37003c"/>
-          <circle cx="36" cy="44" r="1.8" fill="#37003c"/>
-          <path d="M30 48 Q32 50 34 48" stroke="#37003c" stroke-width="1.3" fill="none" stroke-linecap="round"/>
-        </g>
-      </svg>
-    </div>
+    <img class="brand-mark" src="./assets/premier-league-logo.webp" alt="Premier League" width="38" height="38">
     <span class="brand-name">PL Insight</span>
   </div>
   <nav class="nav" id="nav">
@@ -194,7 +215,6 @@
       <option value="wage">Wage (£/wk)</option>
     </select>
     <input class="search" id="searchbox" type="search" placeholder="Search player…" autocomplete="off" list="player-list">
-    <div class="avatar">AB</div>
   </div>
 </header>
 
@@ -221,43 +241,38 @@
 <section id="view-dashboard" class="view active">
   <div class="grid-2">
     <section class="panel panel-pad">
-      <div class="panel-head"><div class="panel-title">Model performance</div><button class="more">⋮</button></div>
+      <div class="panel-head"><div class="panel-title">Model performance</div></div>
       <div class="metrics">
         <div class="metric">
           <div class="metric-label">R² (log)</div>
           <div class="metric-value" id="kpi-r2">—</div>
-          <div class="bars" id="r2-bars"></div>
+          <div class="metric-sub">On 2025-26 holdout. Higher is better.</div>
         </div>
         <div class="metric">
           <div class="metric-label">MAE (log)</div>
           <div class="metric-value" id="kpi-mae">—</div>
-          <div class="rate-track"></div>
+          <div class="metric-sub">Lower is better. In log(€).</div>
         </div>
         <div class="metric">
           <div class="metric-label">80% coverage</div>
           <div class="metric-value" id="kpi-cov">—</div>
-          <div class="spark"><svg viewBox="0 0 160 36" preserveAspectRatio="none"><polyline points="0,27 20,22 40,18 60,16 80,14 100,13 120,12 140,12 160,11" fill="none" stroke="#17c76a" stroke-width="2"/></svg></div>
+          <div class="metric-sub">Target 80%. Share of actuals inside the model's interval.</div>
         </div>
       </div>
     </section>
 
     <section class="panel panel-pad">
-      <div class="panel-head"><div class="panel-title">Dataset</div><button class="more">⋮</button></div>
-      <div class="metrics">
+      <div class="panel-head"><div class="panel-title">Dataset</div></div>
+      <div class="metrics" style="grid-template-columns:1fr 1fr">
         <div class="metric">
           <div class="metric-label">Scored players</div>
           <div class="metric-value" id="kpi-scored">—</div>
-          <div class="metric-sub">in 2025-26 holdout</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">TM match rate</div>
-          <div class="metric-value" id="kpi-match">—</div>
-          <div class="metric-sub">of player-season rows</div>
+          <div class="metric-sub">With a model prediction in 2025-26.</div>
         </div>
         <div class="metric">
           <div class="metric-label">Mean |gap vs model|</div>
           <div class="metric-value" id="kpi-gap">—</div>
-          <div class="metric-sub">on scored rows</div>
+          <div class="metric-sub">Average absolute % between actual and prediction.</div>
         </div>
       </div>
       <div class="pct-bars" id="verdict-bar"></div>
@@ -265,13 +280,13 @@
     </section>
 
     <section class="panel panel-pad chart-panel">
-      <div class="panel-head"><div><div class="panel-title">Prediction accuracy</div></div><button class="more">⋮</button></div>
+      <div class="panel-head"><div><div class="panel-title">Prediction accuracy</div></div></div>
       <div style="font-size:10px;color:#8b919b">Each dot = one scored player (log scale). Dashed line = perfect prediction. Points above = model too low; below = model too high.</div>
       <div class="chart-wrap"><canvas id="scatter-chart"></canvas></div>
     </section>
 
     <section class="panel">
-      <div class="panel-head" style="padding:17px 18px 0;margin-bottom:0"><div class="panel-title">Mispricing feed</div><button class="more" style="margin-right:14px">⋮</button></div>
+      <div class="panel-head" style="padding:17px 18px 0;margin-bottom:0"><div class="panel-title">Mispricing feed</div></div>
       <div class="search-row">
         <div class="chip-row">
           <span class="chip active" data-feed="all">All</span>
@@ -286,13 +301,8 @@
     </section>
 
     <section class="panel panel-pad">
-      <div class="panel-head"><div class="panel-title">Verdict breakdown</div><button class="more">⋮</button></div>
-      <div class="chart-wrap" style="height:200px"><canvas id="verdict-chart"></canvas></div>
-    </section>
-
-    <section class="panel panel-pad">
-      <div class="panel-head"><div class="panel-title">Top features (across all players)</div><button class="more">⋮</button></div>
-      <div id="global-shap-list" style="margin-top:4px"></div>
+      <div class="panel-head"><div class="panel-title">Verdict breakdown</div></div>
+      <div class="chart-wrap" style="height:230px"><canvas id="verdict-chart"></canvas></div>
     </section>
   </div>
 </section>
@@ -312,8 +322,7 @@
         <div class="panel-title">Market underpays</div>
         <div style="font-size:11px;color:#8b919b;margin-top:3px">Players whose actual market value is <strong>below</strong> the model's prediction. Potential bargains, or players the market has written down for an invisible reason (injury, out of favour, contract leverage).</div>
       </div>
-      <button class="more">⋮</button>
-    </div>
+      </div>
     <div class="chip-row" id="under-filters" style="margin-bottom:12px"></div>
     <div style="color:#8b919b;font-size:11px;margin-bottom:12px" id="under-count"></div>
     <div class="chart-wrap" style="height:280px;margin-bottom:16px"><canvas id="under-chart"></canvas></div>
@@ -328,8 +337,7 @@
         <div class="panel-title">Market overpays</div>
         <div style="font-size:11px;color:#8b919b;margin-top:3px">Players whose actual market value is <strong>above</strong> the model's prediction. Hype premium, "manager wanted them", or youth prospects with speculative valuations.</div>
       </div>
-      <button class="more">⋮</button>
-    </div>
+      </div>
     <div class="chip-row" id="over-filters" style="margin-bottom:12px"></div>
     <div style="color:#8b919b;font-size:11px;margin-bottom:12px" id="over-count"></div>
     <div class="chart-wrap" style="height:280px;margin-bottom:16px"><canvas id="over-chart"></canvas></div>
@@ -341,7 +349,7 @@
 <section id="view-insights" class="view">
   <div class="grid-2">
     <section class="panel panel-pad">
-      <div class="panel-head"><div class="panel-title">Model internals</div><button class="more">⋮</button></div>
+      <div class="panel-head"><div class="panel-title">Model internals</div></div>
       <div class="metrics">
         <div class="metric">
           <div class="metric-label">Winning model</div>
@@ -362,17 +370,32 @@
     </section>
 
     <section class="panel panel-pad">
-      <div class="panel-head"><div class="panel-title">What the model learned</div><button class="more">⋮</button></div>
-      <div style="font-size:11px;color:#656c77;margin-bottom:10px">Horizontal bars = global SHAP importance (mean |contribution| across all scored players).</div>
+      <div class="panel-head"><div class="panel-title">What the model learned</div></div>
+      <div style="font-size:11px;color:#656c77;margin-bottom:10px">Longer bar = larger average impact on the model's prediction. Mean |SHAP contribution| across all scored players.</div>
       <div class="chart-wrap" style="height:280px"><canvas id="feat-chart"></canvas></div>
     </section>
 
     <section class="panel panel-pad" style="grid-column:1 / -1">
       <div class="panel-head"><div class="panel-title">How we validate</div></div>
-      <div style="font-size:12px;line-height:1.65;color:#4c535e;max-width:800px">
-        Season-based holdout: train 2023-24, validate 2024-25, test 2025-26. Inside training, GroupKFold on <code>player_id</code> prevents the same player appearing in both folds — stops cross-season leakage.
-        The point model is tuned via Optuna (TPE sampler + MedianPruner, 20-30 trials per booster), then wrapped in MAPIE's cross-conformal regressor for distribution-free 80% prediction intervals.
-        The leakage guard (yaml + runtime assertion + unit test) excludes FM's own <code>value_high</code>, <code>sell_value</code>, and <code>release_clause</code> from the feature set — those are computed by FM's game engine from <code>current_ability</code>/<code>potential</code>/<code>age</code>/<code>contract</code>, so including them would tautologically dominate the model.
+      <div class="validate-grid">
+        <div class="validate-card">
+          <div class="validate-title">🗓 Split strategy</div>
+          <div class="validate-body">
+            Train on 2023-24, validate on 2024-25, test on 2025-26. Inside training, GroupKFold on <code>player_id</code> keeps the same player out of both folds — no cross-season leakage.
+          </div>
+        </div>
+        <div class="validate-card">
+          <div class="validate-title">🎯 Tuning + intervals</div>
+          <div class="validate-body">
+            Point model tuned with Optuna (TPE sampler + MedianPruner, 20-30 trials per booster), then wrapped in MAPIE's cross-conformal regressor for distribution-free 80% prediction intervals.
+          </div>
+        </div>
+        <div class="validate-card">
+          <div class="validate-title">🛡 Leakage guard</div>
+          <div class="validate-body">
+            YAML + runtime assertion + unit test exclude FM's <code>value_high</code>, <code>sell_value</code>, <code>release_clause</code>. FM derives those from <code>current_ability</code>/<code>potential</code>/<code>age</code>/<code>contract</code> — using them would tautologically dominate the model.
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -387,7 +410,16 @@ const state = {
   players: null, meta: null, mispricing: null,
   byKey: new Map(),
   byPlayerLatest: new Map(),
-  misp: { positions: new Set(), seasons: new Set() },
+  misp: {
+    player: '',
+    clubs: new Set(),
+    positions: new Set(),
+    seasons: new Set(),
+    verdicts: new Set(),
+    minMinutes: null,
+    mispMin: null,
+    plOnly: true,
+  },
   current: null,
   view: 'dashboard',
   charts: {},
@@ -464,36 +496,174 @@ function setupControls() {
   document.getElementById('feed-search').addEventListener('input', renderDashboardFeed);
 }
 
+const POSITIONS = ['GK','CB','FB','DM','CM','AM','W','ST'];
+const VERDICTS  = ['excellent','good','fair','poor'];
+const PL_CLUBS = new Set([
+  'arsenal','aston villa','bournemouth','brentford','brighton','brighton & hove al..',
+  'brighton & hove albion','burnley','chelsea','crystal palace','everton','fulham',
+  'ipswich','ipswich town','leeds','leeds united','leicester','leicester city',
+  'liverpool','luton','luton town','manchester city','manchester united','man city',
+  'man united','newcastle','newcastle united','nottingham forest','sheffield united',
+  'southampton','sunderland','tottenham','tottenham hotspur','west ham','west ham united',
+  'wolves','wolverhampton','wolverhampton wanderers',
+]);
+function isPLClub(c) { return !!c && PL_CLUBS.has(String(c).toLowerCase()); }
+
 function buildFilters(containerId, seasons) {
   const container = document.getElementById(containerId);
-  container.innerHTML = '';
-  const positions = ['GK','CB','FB','DM','CM','AM','W','ST'];
-  const addGroup = (label, items, onToggle, isActive) => {
-    const l = document.createElement('span'); l.className='group-label'; l.textContent=label;
-    container.appendChild(l);
-    for (const t of items) {
-      const el = document.createElement('span');
-      el.className = 'chip' + (isActive(t) ? ' active' : '');
-      el.textContent = t;
-      el.onclick = () => { el.classList.toggle('active'); onToggle(t); syncFilters(); renderMispricing('underpays'); renderMispricing('overpays'); };
-      container.appendChild(el);
+  const clubs = Array.from(new Set(state.players.map(r => r.club).filter(Boolean)))
+    .filter(c => !state.misp.plOnly || isPLClub(c))
+    .sort();
+  container.className = 'filter-card';
+  container.innerHTML = `
+    <div class="filter-grid">
+      <div class="filter-field">
+        <label>Player</label>
+        <input type="search" data-f="player" placeholder="Search by name">
+      </div>
+      <div class="filter-field">
+        <label>Club</label>
+        <div class="ms" data-f="clubs"></div>
+      </div>
+      <div class="filter-field">
+        <label>Position</label>
+        <div class="ms" data-f="positions"></div>
+      </div>
+      <div class="filter-field">
+        <label>Season</label>
+        <div class="ms" data-f="seasons"></div>
+      </div>
+      <div class="filter-field">
+        <label>Verdict</label>
+        <div class="ms" data-f="verdicts"></div>
+      </div>
+      <div class="filter-field">
+        <label>Min minutes</label>
+        <input type="number" data-f="minMinutes" min="0" step="90" placeholder="e.g. 900">
+      </div>
+      <div class="filter-field">
+        <label>Mispricing ≥ (%)</label>
+        <input type="number" data-f="mispMin" min="0" max="500" step="5" placeholder="e.g. 25">
+      </div>
+      <div class="filter-actions">
+        <label class="pl-toggle">
+          <input type="checkbox" data-f="plOnly" ${state.misp.plOnly ? 'checked' : ''}>
+          <span>Premier League clubs only</span>
+        </label>
+        <button class="link-btn" data-act="clear">Clear filters</button>
+        <button class="btn-primary" data-act="search">Search</button>
+      </div>
+    </div>
+  `;
+
+  // Build multi-selects
+  mountMultiSelect(container.querySelector('[data-f="clubs"]'),     'All clubs',     clubs,     state.misp.clubs);
+  mountMultiSelect(container.querySelector('[data-f="positions"]'), 'All positions', POSITIONS, state.misp.positions);
+  mountMultiSelect(container.querySelector('[data-f="seasons"]'),   'All seasons',   seasons,   state.misp.seasons);
+  mountMultiSelect(container.querySelector('[data-f="verdicts"]'),  'All verdicts',  VERDICTS,  state.misp.verdicts, { labelFor: v => v[0].toUpperCase()+v.slice(1) });
+
+  // Wire text/number inputs
+  container.querySelector('[data-f="player"]').value     = state.misp.player || '';
+  container.querySelector('[data-f="minMinutes"]').value = state.misp.minMinutes ?? '';
+  container.querySelector('[data-f="mispMin"]').value    = state.misp.mispMin ?? '';
+  container.querySelector('[data-f="player"]').addEventListener('input', e => {
+    state.misp.player = e.target.value; applyFiltersToAll();
+  });
+  container.querySelector('[data-f="minMinutes"]').addEventListener('input', e => {
+    const v = e.target.value.trim(); state.misp.minMinutes = v === '' ? null : Number(v); applyFiltersToAll();
+  });
+  container.querySelector('[data-f="mispMin"]').addEventListener('input', e => {
+    const v = e.target.value.trim(); state.misp.mispMin = v === '' ? null : Number(v); applyFiltersToAll();
+  });
+  container.querySelector('[data-f="plOnly"]').addEventListener('change', e => {
+    state.misp.plOnly = e.target.checked;
+    // Clubs set may now include non-PL names from before; drop them.
+    if (state.misp.plOnly) {
+      for (const c of Array.from(state.misp.clubs)) if (!isPLClub(c)) state.misp.clubs.delete(c);
     }
+    buildFilters('under-filters', seasons);
+    buildFilters('over-filters',  seasons);
+    applyFiltersToAll();
+  });
+
+  // Actions
+  container.querySelector('[data-act="search"]').onclick = applyFiltersToAll;
+  container.querySelector('[data-act="clear"]').onclick = () => {
+    state.misp.player = '';
+    state.misp.clubs.clear();
+    state.misp.positions.clear();
+    state.misp.seasons.clear();
+    state.misp.verdicts.clear();
+    state.misp.minMinutes = null;
+    state.misp.mispMin = null;
+    buildFilters('under-filters', seasons);
+    buildFilters('over-filters',  seasons);
+    applyFiltersToAll();
   };
-  addGroup('Position:', positions, pos => {
-    if (state.misp.positions.has(pos)) state.misp.positions.delete(pos); else state.misp.positions.add(pos);
-  }, p => state.misp.positions.has(p));
-  addGroup('Season:', seasons, s => {
-    if (state.misp.seasons.has(s)) state.misp.seasons.delete(s); else state.misp.seasons.add(s);
-  }, s => state.misp.seasons.has(s));
 }
 
-function syncFilters() {
-  for (const chip of document.querySelectorAll('#under-filters .chip, #over-filters .chip')) {
-    const t = chip.textContent;
-    const isPos = ['GK','CB','FB','DM','CM','AM','W','ST'].includes(t);
-    chip.classList.toggle('active', isPos ? state.misp.positions.has(t) : state.misp.seasons.has(t));
+function applyFiltersToAll() {
+  renderMispricing('underpays');
+  renderMispricing('overpays');
+}
+
+/* Reusable multi-select dropdown with checkboxes. */
+function mountMultiSelect(host, placeholder, options, stateSet, { labelFor } = {}) {
+  const label = labelFor || (x => x);
+  const summarize = () => {
+    if (stateSet.size === 0) return `<span class="ms-label placeholder">${placeholder}</span>`;
+    if (stateSet.size === options.length) return `<span class="ms-label">${placeholder}</span>`;
+    const arr = Array.from(stateSet).map(label);
+    const txt = arr.length <= 2 ? arr.join(', ') : `${arr.length} selected`;
+    return `<span class="ms-label">${txt}</span>`;
+  };
+  const render = () => {
+    host.innerHTML = `
+      <button type="button" class="ms-btn">
+        ${summarize()}
+        <span class="ms-caret">▾</span>
+      </button>
+      <div class="ms-panel">
+        ${options.map(opt => `
+          <label class="ms-option">
+            <input type="checkbox" value="${escapeHtml(opt)}" ${stateSet.has(opt) ? 'checked' : ''}>
+            <span>${escapeHtml(label(opt))}</span>
+          </label>`).join('')}
+      </div>
+    `;
+    host.querySelector('.ms-btn').onclick = () => {
+      // Close others
+      for (const o of document.querySelectorAll('.ms.open')) if (o !== host) o.classList.remove('open');
+      host.classList.toggle('open');
+    };
+    for (const cb of host.querySelectorAll('.ms-option input')) {
+      cb.onchange = e => {
+        const v = e.target.value;
+        if (e.target.checked) stateSet.add(v); else stateSet.delete(v);
+        host.querySelector('.ms-btn').innerHTML = `${summarize()}<span class="ms-caret">▾</span>`;
+        // Keep both filter cards' summaries in sync (under + over share state)
+        syncOtherMultiSelect(host, placeholder, options, stateSet, labelFor);
+        applyFiltersToAll();
+      };
+    }
+  };
+  render();
+}
+
+function syncOtherMultiSelect(sourceHost, placeholder, options, stateSet, labelFor) {
+  const fkey = sourceHost.getAttribute('data-f');
+  for (const h of document.querySelectorAll(`.ms[data-f="${fkey}"]`)) {
+    if (h === sourceHost) continue;
+    mountMultiSelect(h, placeholder, options, stateSet, { labelFor });
   }
 }
+
+// Close dropdowns on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.ms')) {
+    for (const o of document.querySelectorAll('.ms.open')) o.classList.remove('open');
+  }
+});
 
 /* ---------- Formatting ---------- */
 function fmt(x, unit) {
@@ -522,6 +692,7 @@ function allScoredRows(target) {
     out.push({
       player: r.player, player_id: r.player_id, club: r.club,
       season: r.season, position: r.position, bio: r.bio,
+      minutes: r.minutes, age: r.age,
       actual: t.actual, pred: t.predicted,
       vsModel, z, verdict: t.verdict,
     });
@@ -542,15 +713,9 @@ function renderDashboard() {
     : '—');
   document.getElementById('model-tag').innerHTML = `⚙ ${state.meta.targets[target]?.model?.toUpperCase() || 'LGBM'} · R² ${meta.point_r2_log?.toFixed(2) ?? '—'} · ${(meta.achieved_coverage*100 || 0).toFixed(0)}% cov`;
 
-  // R² sparkline bars — a sawtooth as decorative; just fills visual gap.
-  const bars = document.getElementById('r2-bars'); bars.innerHTML='';
-  const heights = [15,20,18,25,22,26,20,17,24,23,26,20,23,18,25,23,22,26,21,25,20,23,27,22,25,21,24,22,27,25,22,25];
-  heights.forEach((h,i) => { const s = document.createElement('i'); s.style.height = h + 'px'; if(i%7===0) s.classList.add('alt'); bars.appendChild(s); });
-
   // Dataset KPIs
   const rows = allScoredRows(target);
-  document.getElementById('kpi-scored').innerHTML = `${rows.length} <span class="metric-note">${(rows.length / 537 * 100).toFixed(0)}%</span>`;
-  document.getElementById('kpi-match').textContent  = '91%';
+  document.getElementById('kpi-scored').textContent = String(rows.length);
   const meanGap = rows.reduce((a,r)=>a+Math.abs(r.vsModel),0) / Math.max(1,rows.length);
   document.getElementById('kpi-gap').textContent = (meanGap*100).toFixed(0) + '%';
 
@@ -574,7 +739,6 @@ function renderDashboard() {
 
   renderScatter(rows, unit);
   renderVerdictChart(vCounts);
-  renderGlobalShap();
   renderDashboardFeed();
 }
 
@@ -632,36 +796,27 @@ function renderVerdictChart(counts) {
   state.charts.verdict = new Chart(canvas, {
     type: 'bar',
     data: {
-      labels: ['Excellent (≤20%)','Good (within interval)','Fair','Poor (outside interval)'],
+      labels: ['Excellent','Good','Fair','Poor'],
       datasets: [{
         data: [counts.excellent, counts.good, counts.fair, counts.poor],
         backgroundColor: ['#16c767','#4c84e8','#e9a21b','#f24b74'],
-        borderRadius: 4
+        borderRadius: 4,
+        barThickness: 22,
       }]
     },
     options: {
+      indexAxis: 'y',
       maintainAspectRatio: false,
-      plugins: { legend:{display:false} },
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks: { label: ctx => `${ctx.parsed.x} players` } },
+      },
       scales: {
-        x: { grid:{display:false}, ticks:{color:'#8b919b',font:{size:10}} },
-        y: { grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10}} }
+        x: { grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10}} },
+        y: { grid:{display:false}, ticks:{color:'#4c535e',font:{size:12,weight:'500'}} }
       }
     }
   });
-}
-
-function renderGlobalShap() {
-  const target = document.getElementById('target').value;
-  const top = state.meta.targets[target]?.shap_global_top15?.slice(0,8) || [];
-  const max = Math.max(...top.map(t=>t.mean_abs_shap), 0.001);
-  const el = document.getElementById('global-shap-list');
-  el.innerHTML = top.map(t => `
-    <div class="shap-item" style="grid-template-columns:140px 50px 1fr">
-      <div class="f">${t.feature}</div>
-      <div class="v">${t.mean_abs_shap.toFixed(3)}</div>
-      <div class="bar"><span style="background:#16c767; left:0; width:${t.mean_abs_shap/max*100}%"></span></div>
-    </div>
-  `).join('');
 }
 
 function renderDashboardFeed() {
@@ -728,12 +883,21 @@ function renderMispricing(side) {
   const unit = target === 'value' ? '€' : '£';
   let rows = allScoredRows(target);
   rows = rows.filter(r => side==='underpays' ? r.vsModel<0 : r.vsModel>0);
-  if (state.misp.positions.size) rows = rows.filter(r => r.position && state.misp.positions.has(r.position));
-  if (state.misp.seasons.size)   rows = rows.filter(r => state.misp.seasons.has(r.season));
+  const f = state.misp;
+  if (f.plOnly)         rows = rows.filter(r => isPLClub(r.club));
+  if (f.positions.size) rows = rows.filter(r => r.position && f.positions.has(r.position));
+  if (f.seasons.size)   rows = rows.filter(r => f.seasons.has(r.season));
+  if (f.clubs.size)     rows = rows.filter(r => r.club && f.clubs.has(r.club));
+  if (f.verdicts.size)  rows = rows.filter(r => f.verdicts.has(r.verdict?.label));
+  if (f.player)         { const q = f.player.toLowerCase(); rows = rows.filter(r => (r.player||'').toLowerCase().includes(q)); }
+  if (f.minMinutes != null && !Number.isNaN(f.minMinutes)) rows = rows.filter(r => (r.minutes ?? 0) >= f.minMinutes);
+  if (f.mispMin   != null && !Number.isNaN(f.mispMin))   rows = rows.filter(r => Math.abs(r.vsModel*100) >= f.mispMin);
   rows.sort((a,b)=>Math.abs(b.z)-Math.abs(a.z));
 
   const idPrefix = side==='underpays' ? 'under' : 'over';
-  document.getElementById(idPrefix+'-count').textContent = `${rows.length} player${rows.length===1?'':'s'} match the current filters.`;
+  const countEl = document.getElementById(idPrefix+'-count');
+  if (!rows.length) countEl.textContent = 'No players match the current filters. Try widening Position or clearing the Mispricing ≥ field.';
+  else countEl.textContent = `${rows.length} player${rows.length===1?'':'s'} match the current filters.`;
 
   // Chart
   const canvas = document.getElementById(idPrefix+'-chart');
@@ -742,11 +906,12 @@ function renderMispricing(side) {
   state.charts[idPrefix] = new Chart(canvas, {
     type: 'bar',
     data: {
-      labels: top.map(r=>r.player),
+      labels: top.map(r => r.club ? `${r.player} · ${r.club}` : r.player),
       datasets: [{
         data: top.map(r=>Math.abs(r.vsModel*100)),
         backgroundColor: side==='underpays' ? '#f24b74cc' : '#e9a21bcc',
-        borderRadius: 4
+        borderRadius: 4,
+        barThickness: 14,
       }]
     },
     options: {
@@ -902,7 +1067,7 @@ function renderPlayer(row) {
 
     <div class="grid-2 mt">
       <div class="panel panel-pad">
-        <div class="panel-head"><div class="panel-title">Player info</div><button class="more">⋮</button></div>
+        <div class="panel-head"><div class="panel-title">Player info</div></div>
         <table>
           <tr><th>Full name</th><td>${escapeHtml(bio.full_name || row.player)}</td></tr>
           <tr><th>Date of birth</th><td>${bio.date_of_birth || '—'}</td></tr>
@@ -920,25 +1085,25 @@ function renderPlayer(row) {
         </table>
       </div>
       <div class="panel panel-pad">
-        <div class="panel-head"><div class="panel-title">Why the model predicts this</div><button class="more">⋮</button></div>
+        <div class="panel-head"><div class="panel-title">Why the model predicts this</div></div>
         <div id="player-shap"></div>
       </div>
     </div>
 
     ${row.value_trajectory?.length ? `
     <div class="panel panel-pad mt chart-panel" style="min-height:300px">
-      <div class="panel-head"><div class="panel-title">Market value over time (Transfermarkt)</div><button class="more">⋮</button></div>
+      <div class="panel-head"><div class="panel-title">Market value over time (Transfermarkt)</div></div>
       <div class="chart-wrap"><canvas id="val-traj-chart"></canvas></div>
     </div>` : ''}
 
     ${row.season_stats?.length ? `
     <div class="panel panel-pad mt chart-panel" style="min-height:300px">
-      <div class="panel-head"><div class="panel-title">Season by season</div><button class="more">⋮</button></div>
+      <div class="panel-head"><div class="panel-title">Season by season</div></div>
       <div class="chart-wrap"><canvas id="stats-chart"></canvas></div>
     </div>` : ''}
 
     <div class="panel mt">
-      <div class="panel-head" style="padding:17px 18px 0;margin-bottom:0"><div class="panel-title">Career moves</div><button class="more" style="margin-right:14px">⋮</button></div>
+      <div class="panel-head" style="padding:17px 18px 0;margin-bottom:0"><div class="panel-title">Career moves</div></div>
       <div class="table-wrap" style="padding:12px 0 4px">
         <table>
           <thead><tr><th style="padding-left:18px">Date</th><th>From</th><th>To</th><th class="num" style="padding-right:18px">Fee</th></tr></thead>
@@ -957,13 +1122,13 @@ function renderPlayer(row) {
   const top = (t?.shap_top) || [];
   const maxAbs = Math.max(...top.map(s=>Math.abs(s.contribution_log)), 0.01);
   shapEl.innerHTML = top.map(s => {
-    const w = Math.abs(s.contribution_log) / maxAbs * 46;
+    const halfPct = Math.min(50, Math.abs(s.contribution_log) / maxAbs * 50);
     const isPos = s.contribution_log >= 0;
     return `
       <div class="shap-item">
-        <div class="f">${s.feature}</div>
-        <div class="v">${isPos?'+':''}${s.contribution_log.toFixed(2)}</div>
-        <div class="bar"><span style="background:${isPos?'#16c767':'#f24b74'};${isPos?'left:50%':`right:50%;left:auto;transform-origin:right`};width:${w}%"></span></div>
+        <div class="f">${escapeHtml(s.feature)}</div>
+        <div class="v ${isPos?'pos':'neg'}">${isPos?'+':''}${s.contribution_log.toFixed(2)}</div>
+        <div class="bar"><span class="${isPos?'pos':'neg'}" style="width:${halfPct}%"></span></div>
       </div>`;
   }).join('') || '<div style="color:#8b919b;padding:14px">No prediction for this row</div>';
 
@@ -976,7 +1141,7 @@ function drawValueTrajectory(points) {
   if (state.charts['val-traj']) state.charts['val-traj'].destroy();
   state.charts['val-traj'] = new Chart(canvas, {
     type:'line',
-    data:{ labels: points.map(p=>p.date), datasets:[{ label:'TM market value (€)', data: points.map(p=>p.market_value_eur), borderColor:'#37003c', backgroundColor:'#37003c22', fill:true, tension:0.25, pointRadius:2 }]},
+    data:{ labels: points.map(p=>p.date), datasets:[{ label:'TM market value (€)', data: points.map(p=>p.market_value_eur), borderColor:'#37003c', backgroundColor:'#37003c14', fill:true, tension:0.25, pointRadius:2 }]},
     options:{ maintainAspectRatio:false,
       plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>'€'+ctx.parsed.y.toLocaleString('en-US')}}},
       scales:{
