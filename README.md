@@ -7,6 +7,8 @@ diverges most from what the measurable features alone would predict.
 
 > **Live demo:** https://premier-league-value-modelling-web.vercel.app/
 
+![CI](https://github.com/ashutosh-kulkarni-dev/premier-league-value-modelling/actions/workflows/ci.yml/badge.svg)
+
 > The project treats the model's **residuals as the deliverable**, not as errors
 > to minimise. Residuals quantify the "human premium" that mechanical features
 > can't see: manager demand, auction dynamics, expiring contracts, injury
