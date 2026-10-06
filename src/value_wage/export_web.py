@@ -24,7 +24,7 @@ import pandas as pd
 import shap
 
 from value_wage.config import ALL_TARGETS, Settings, TARGET_COLUMN, get_settings
-from value_wage.features import feature_lists_for, parse_primary_position
+from value_wage.features import feature_lists_for
 from value_wage.splits import make_splits
 from value_wage.train import TrainedArtifact, _normalize_na
 
@@ -323,24 +323,37 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
             pass
         return x
 
-    def _canonical_position(primary: Any, raw: Any) -> Any:
-        # Prefer the already-bucketed value; otherwise re-run the classifier on
-        # the raw position string so FMInside short codes ("D S", "F M S", …)
-        # don't leak through as un-filterable labels in the UI.
-        primary = _safe(primary)
-        if primary:
-            return primary
-        raw = _safe(raw)
-        if raw is None:
+    # Position label shown in the UI comes ONLY from Transfermarkt's
+    # sub_position. FM's multi-code list is unreliable for primary position
+    # (Luke Shaw's "DC,DL" misclassifies as CB; Šeško's "AMC,ST" as AM).
+    # Rows with no TM sub_position are left as null — they won't match any
+    # position chip, which is the honest outcome when TM has no data.
+    _SUB_POSITION_TO_BUCKET: dict[str, str] = {
+        "goalkeeper": "GK",
+        "centre-back": "CB", "center-back": "CB",
+        "left-back": "FB", "right-back": "FB",
+        "left wing-back": "FB", "right wing-back": "FB",
+        "defensive midfield": "DM",
+        "central midfield": "CM",
+        "left midfield": "W", "right midfield": "W",
+        "attacking midfield": "AM",
+        "left winger": "W", "right winger": "W",
+        "centre-forward": "ST", "center-forward": "ST",
+        "second striker": "ST",
+    }
+
+    def _canonical_position(sub_position: Any) -> Any:
+        sub = _safe(sub_position)
+        if not sub:
             return None
-        bucketed = parse_primary_position(pd.Series([raw])).iloc[0]
-        return bucketed if pd.notna(bucketed) else raw
+        return _SUB_POSITION_TO_BUCKET.get(str(sub).strip().lower())
 
     for _, r in features[identity_cols].iterrows():
         pid = int(r["player_id"])
         key = (pid, r["season"], _safe(r.get("snapshot")) or "end")
         if key not in per_player:
             tm_id = tm_id_by_master_pid.get(pid)
+            bio_row = bio_by_tm.get(tm_id) if tm_id else None
             per_player[key] = {
                 "player_id": pid,
                 "player_tm_id": tm_id,
@@ -348,10 +361,10 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
                 "season": r["season"],
                 "snapshot": _safe(r.get("snapshot")) or "end",
                 "club": _safe(r.get("club")) or _safe(r.get("team")),
-                "position": _canonical_position(r.get("primary_position"), r.get("position")),
+                "position": _canonical_position((bio_row or {}).get("sub_position")),
                 "age": None if pd.isna(r.get("age")) else float(r["age"]),
                 "minutes": None if pd.isna(r.get("minutes")) else int(r["minutes"]),
-                "bio": bio_by_tm.get(tm_id) if tm_id else None,
+                "bio": bio_row,
                 "career": career_by_tm.get(tm_id, []) if tm_id else [],
                 "season_stats": stats_by_tm.get(tm_id, []) if tm_id else [],
                 "value_trajectory": valtraj_by_tm.get(tm_id, []) if tm_id else [],
