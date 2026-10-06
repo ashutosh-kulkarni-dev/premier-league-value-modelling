@@ -23,7 +23,7 @@ import pandas as pd
 from mapie.regression import CrossConformalRegressor, SplitConformalRegressor
 from sklearn.model_selection import GroupKFold
 
-from value_wage.config import Settings, TARGET_COLUMN, Target, get_settings
+from value_wage.config import TARGET_COLUMN, Settings, Target, get_settings
 from value_wage.features import feature_lists_for
 from value_wage.models.base import build_model
 from value_wage.preprocess import make_booster_preprocessor

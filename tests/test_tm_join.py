@@ -7,8 +7,6 @@ multi-club / loan edge case.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 import pytest
 
@@ -19,7 +17,6 @@ from value_wage.sources.transfermarkt_kaggle import (
     join_master_to_tm,
     load_tm_raw,
 )
-
 
 SETTINGS = get_settings()
 TM_DIR = SETTINGS.paths.project_root / "data" / "raw" / "transfermarkt"

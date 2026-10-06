@@ -23,8 +23,7 @@ import numpy as np
 import pandas as pd
 import shap
 
-from value_wage.config import ALL_TARGETS, Settings, TARGET_COLUMN, get_settings
-from value_wage.features import feature_lists_for
+from value_wage.config import ALL_TARGETS, TARGET_COLUMN, Settings, get_settings
 from value_wage.splits import make_splits
 from value_wage.train import TrainedArtifact, _normalize_na
 

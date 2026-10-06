@@ -202,13 +202,13 @@ def _parse_tm_season(s: str) -> str | None:
     """'23/24' → '2023-24', with century heuristic (<=50 → 2000s, >50 → 1900s)."""
     if not isinstance(s, str) or "/" not in s:
         return None
-    a, b = s.split("/")
+    a, _ = s.split("/")
     try:
-        ai, bi = int(a), int(b)
+        ai = int(a)
     except ValueError:
         return None
     yr_a = 2000 + ai if ai <= 50 else 1900 + ai
-    yr_b = yr_a + 1 if bi > ai or (ai == 99 and bi == 0) else yr_a + 1
+    yr_b = yr_a + 1
     return f"{yr_a}-{yr_b % 100:02d}"
 
 
@@ -394,11 +394,12 @@ def join_master_to_tm(
 
         # Pass 2: name match + master's club ∈ TM's known clubs for this player this season.
         if matched is None and len(candidates):
-            def clubs_for_tm_id(tm_id: int) -> set[str]:
+            def clubs_for_tm_id(tm_id: int, season=season) -> set[str]:
                 return clubs_lookup.get((int(tm_id), season), set())
+            row_alias = row["club_alias"]
             p2 = candidates[
                 candidates.apply(
-                    lambda c: row["club_alias"] in clubs_for_tm_id(c["player_tm_id"]),
+                    lambda c, row_alias=row_alias: row_alias in clubs_for_tm_id(c["player_tm_id"]),
                     axis=1,
                 )
             ]

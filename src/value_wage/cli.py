@@ -18,6 +18,7 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
+from value_wage.calibration import calibrate
 from value_wage.config import ALL_BOOSTERS, ALL_TARGETS, TARGET_COLUMN, Model, Target, get_settings
 from value_wage.data import copy_from_scout_pipeline, load_master, load_master_with_tm
 from value_wage.evaluate import (
@@ -29,11 +30,10 @@ from value_wage.evaluate import (
     summarise_predictions,
 )
 from value_wage.explain import explain_tree_model, save_global_summary_plot, save_waterfall_plot
+from value_wage.export_web import export as export_web_bundle
 from value_wage.features import build_feature_matrix
 from value_wage.mispricing import build_board
 from value_wage.splits import make_splits
-from value_wage.calibration import calibrate
-from value_wage.export_web import export as export_web_bundle
 from value_wage.train import TrainedArtifact, _normalize_na, predict, train_booster
 from value_wage.tuning import tune
 
@@ -509,7 +509,7 @@ def calibrate_run(
         settings.paths.processed_dir / f"predictions_calibrated_{target}_{model}.parquet",
         index=False,
     )
-    console.print(f"[green]OK[/green] calibrated predictions saved")
+    console.print("[green]OK[/green] calibrated predictions saved")
 
 
 # ---------------- export ----------------
