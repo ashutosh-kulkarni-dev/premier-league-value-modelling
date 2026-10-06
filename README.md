@@ -1,4 +1,5 @@
-# PL Insight — Premier League Player Value & Wage Model ![CI](https://github.com/ashutosh-kulkarni-dev/premier-league-value-modelling/actions/workflows/ci.yml/badge.svg)
+![CI](https://github.com/ashutosh-kulkarni-dev/premier-league-value-modelling/actions/workflows/ci.yml/badge.svg)
+# PL Insight — Premier League Player Value & Wage Model 
 
 A regression model and static web UI that predict Premier League players' market
 values (Transfermarkt €) and wages (FM-estimated £/wk) from on-pitch performance
