@@ -8,6 +8,7 @@ Position derivation (v6 regression fix):
 
 from __future__ import annotations
 
+import os
 import re
 import unicodedata
 from datetime import datetime
@@ -47,9 +48,8 @@ TM_SHORT_TO_BUCKET: Final[dict[str, str]] = {
 
 # Default location of the scraper CSV (fallback). Override via settings.paths.scratchpad or the
 # SCRAPED_POSITIONS env var when the layout differs.
-import os as _os
 _DEFAULT_SCRAPED_POSITIONS = Path(
-    _os.environ.get(
+    os.environ.get(
         "SCRAPED_POSITIONS",
         str(Path(__file__).resolve().parents[3] / "scratchpad" / "scraped_positions.csv"),
     )
@@ -81,7 +81,9 @@ def primary_position_from_tm(
     tm = pd.read_csv(tm_players_csv, low_memory=False, usecols=["player_id", "sub_position"])
     tm = tm.dropna(subset=["player_id"]).drop_duplicates(subset=["player_id"])
     tm["bucket"] = tm["sub_position"].map(TM_SUBPOS_TO_BUCKET)
-    lookup = dict(zip(tm["player_id"].astype("Int64").astype(str), tm["bucket"]))
+    lookup = dict(
+        zip(tm["player_id"].astype("Int64").astype(str), tm["bucket"], strict=False)
+    )
 
     def classify(x: object) -> str | None:
         if x is None or (isinstance(x, float) and np.isnan(x)):
