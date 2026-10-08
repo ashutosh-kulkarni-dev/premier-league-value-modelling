@@ -47,3 +47,9 @@ optuna.db-journal
 logs/
 *.log
 *.tmp
+
+# Backup from port of integration_v7 (local only)
+_backup_pre_port/
+
+# Local backup files
+*.bak

@@ -328,7 +328,11 @@ def join_master_to_tm(
     expanded = m.loc[m.index.repeat(len(SEASON_SNAPSHOTS))].copy().reset_index(drop=True)
     expanded["snapshot"] = [lbl for _ in range(len(m)) for lbl, _, _ in SEASON_SNAPSHOTS]
 
-    pass_counts: dict[int, int] = {1: 0, 2: 0, 3: 0, 4: 0}
+    pass_counts: dict[int, int] = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    # Uniqueness guard: at most one master row per (season, tm_id, snapshot) can be matched
+    # by the loose Pass 5. Exact passes (1/2/3) write freely; collision-fix comes from
+    # requiring exact-name OR club match in P5.
+    used_tm_ids_by_season: dict[tuple[str, str], set[int]] = {}
     tm_val_col = "market_value_eur"
     tm_age_col = "age_at_snapshot"
     tm_date_col = "snapshot_date"
@@ -436,8 +440,55 @@ def join_master_to_tm(
                         matched = p4.iloc[0]
                         matched_pass = 4
 
+        # Pass 5 (safe): multi-token distinctive master name (>=2 tokens, with at least one
+        # token of length >=3 so pure-initials like "A B" are rejected) matches a single
+        # TM candidate by exact normalised name OR by exact club alias in cohort. Uniqueness
+        # guard: skip if the chosen tm_id is already assigned to another master in the same
+        # (season, snapshot). This recovers residuals the stricter Pass-4 lost (Khusanov,
+        # Bayindir, Reid, Grønbæk, Irving, ...) without re-opening Osho/Neto/Thiago.
+        if matched is None:
+            toks_list = (name_norm or "").split()
+            distinctive = (
+                len(toks_list) >= 2
+                and any(len(t) >= 3 for t in toks_list)
+            )
+            cohort = snaps_by_cohort.get((season, snap))
+            if distinctive and cohort is not None:
+                exact_name = cohort[cohort["player_tm_name_norm"] == name_norm]
+                row_alias = row["club_alias"] or ""
+                already = used_tm_ids_by_season.setdefault((season, snap), set())
+                p5 = exact_name
+                if len(p5) == 0 and row_alias:
+                    # Fallback: last-token match + exact club alias
+                    master_last = toks_list[-1]
+                    def _nm_club(cand_row, _ml=master_last, _ra=row_alias) -> bool:
+                        tm_name = cand_row["player_tm_name_norm"] or ""
+                        tm_toks = tm_name.split()
+                        if not tm_toks or tm_toks[-1] != _ml:
+                            return False
+                        return (cand_row.get("current_club_alias") or "") == _ra
+                    p5 = cohort[cohort.apply(_nm_club, axis=1)]
+                # Enforce uniqueness: drop candidates already consumed
+                if len(p5):
+                    p5 = p5[~p5["player_tm_id"].astype(int).isin(already)]
+                if len(p5) >= 1:
+                    master_age = float(row["age"]) if pd.notna(row["age"]) else np.nan
+                    if len(p5) > 1 and not np.isnan(master_age):
+                        p5 = p5.assign(
+                            _age_delta=(p5["age_at_snapshot"].astype(float) - master_age).abs()
+                        ).sort_values("_age_delta")
+                        best = p5.iloc[0]
+                        if pd.notna(best["age_at_snapshot"]) and best["_age_delta"] <= 2.0:
+                            matched = best
+                            matched_pass = 5
+                    elif len(p5) == 1:
+                        matched = p5.iloc[0]
+                        matched_pass = 5
+
         if matched is None or matched_pass is None:
             continue
+        # Record the tm_id usage so Pass 5 can't reassign it elsewhere in the same cohort.
+        used_tm_ids_by_season.setdefault((season, snap), set()).add(int(matched["player_tm_id"]))
         pass_counts[matched_pass] += 1
         expanded.at[i, tm_pass_col] = matched_pass
 

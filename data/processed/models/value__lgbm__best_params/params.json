@@ -1,9 +1,0 @@
-{
-  "num_leaves": 19,
-  "min_data_in_leaf": 24,
-  "learning_rate": 0.010669434444640438,
-  "feature_fraction": 0.582913175657436,
-  "bagging_fraction": 0.8789823623220631,
-  "lambda_l1": 8.685000908273746e-07,
-  "lambda_l2": 0.042193529590380696
-}
