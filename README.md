@@ -1,215 +1,150 @@
-![CI](https://github.com/ashutosh-kulkarni-dev/premier-league-value-modelling/actions/workflows/ci.yml/badge.svg)
-# PL Insight — Premier League Player Value & Wage Model 
+# PL Insight — Premier League Player Value Model
 
-A regression model and static web UI that predict Premier League players' market
-values (Transfermarkt €) and wages (FM-estimated £/wk) from on-pitch performance
-and scouted attributes, and flag players where the actual market valuation
-diverges most from what the measurable features alone would predict.
+A regression pipeline and static web UI that predict Premier League players' market values (Transfermarkt €) from on-pitch performance and scouted football attributes, then flag players where the market valuation diverges most from what measurable features predict.
 
 > **Live demo:** https://premier-league-value-modelling-web.vercel.app/
-> The project treats the model's **residuals as the deliverable**, not as errors
-> to minimise. Residuals quantify the "human premium" that mechanical features
-> can't see: manager demand, auction dynamics, expiring contracts, injury
-> rumours, hype. The mispricing board is a tool for investigation, not a
-> declaration of market error.
+
+The project treats the model's **residuals as insight**, not as errors to minimise — residuals quantify the "human premium" that mechanical features can't see: manager demand, auction dynamics, expiring contracts, injury rumours, hype. The mispricing board is a tool for investigation, not a declaration of market error.
 
 ---
 
-## Highlights
+## Headline metrics (honest fold-2 holdout)
 
-| | Value model | Wage model |
-|---|---|---|
-| **R² (log)**              | 0.78 | 0.86 |
-| **MAE (log)**             | 0.40 | 0.26 |
-| **Spearman ρ**            | 0.88 | 0.94 |
-| **80% interval coverage** | 90% | 90% |
-| **Winner**                | LightGBM | LightGBM |
+Train on 2023-24 + 2024-25, test on 2025-26. Metrics computed on the held-out season — the model has never seen these players at that time point.
 
-- **Three boosters tuned under one Optuna recipe** (LightGBM, XGBoost, HGBR; CatBoost dropped for compute budget).
-- **Season-based split** with GroupKFold on `player_id` inside training — no cross-season leakage.
-- **MAPIE cross-conformal** 80% prediction intervals (distribution-free coverage guarantee).
-- **SHAP** on every prediction, globally and per-player.
-- **Three-layer leakage guard** — yaml allowlist + runtime assertion + unit test — stops FM's own `value_high` from tautologically dominating the model.
+| Metric | Value |
+|---|---:|
+| **R² (log target)** | **0.865** |
+| **MAE (log target)** | **0.252** |
+| **MAE (native €)** | €4.21M |
+| **Median absolute % error** | **14.4%** |
+| **Mean absolute % error** | 43.6% |
+| **80% interval coverage** | 72.8% |
+| **Winning algorithm** | LightGBM |
 
-Full write-up: [`reports/REPORT.md`](reports/REPORT.md).
+Mean APE is tail-heavy because a small subset of low-value players produce extreme relative errors; the median is the honest central-tendency measure for most of the dataset.
 
 ---
 
-## Data sources
+## What the UI shows
 
-| Source | What it brings | Notes |
-|---|---|---|
-| **Transfermarkt** (Kaggle `davidcariboo/player-scores`) | real market values, bio, career, photos, per-match stats | **not committed** — download yourself (see Setup) |
-| **Understat** | per-season xG, xA, xG chain/buildup | ingested upstream; the processed master is committed |
-| **Football Manager 26** (FMinside) | 40+ scouted attributes, `current_ability`, `potential`, contract | one snapshot |
+Each player page carries:
+- **Point prediction** (market value in €)
+- **Confidence tier** — SUPERSTAR / HIGH / MEDIUM / SPECULATIVE, driven by predicted value, minutes played, age, and position availability
+- **SHAP top drivers** — the 3 features most pulling the prediction up and the 3 pulling it down for that specific player
+- **Comparable players** — 3-5 nearest neighbours in feature space within the same primary position, with their actual market values for calibration
+- **Market vs model residual** — the headline mispricing signal
 
-Covers **3 Premier League seasons: 2023-24, 2024-25, 2025-26**.
+The dashboard also surfaces:
+- Current fold-2 R², MAE, and interval coverage
+- Top 20 most under-paid and 20 most over-paid players, filtered to meaningful cohorts (actual ≥ €2M, minutes ≥ 500, excluding SPECULATIVE)
+- Global SHAP feature importance
+
+---
+
+## Data pipeline
+
+Three data sources, joined by stable identifiers (`fmi_player_id` for FM, `player_tm_id` for Transfermarkt) rather than fuzzy name matching:
+
+### Football Manager attributes (per season)
+- **2023-24 season rows** → FMInside FM24 24.3.0 scrape (1,670 PL players, scraped via `scrape_fminside.py` with 3-second rate limit and raw-HTML caching)
+- **2024-25 season rows** → FM24 in-game HTML export after loading May 2025 editor-data updates (transfers, CA/PA changes, aging) — gives post-summer-window + January-window attribute state
+- **2025-26 season rows** → FMInside FM26 scrape (1,673 PL players)
+
+All 46 individual attributes (14 technical, 14 mental, 8 physical, 10 GK) are joined per-season per-snapshot. Goalkeeper attributes are gated to GK rows only. For 2024-25, `current_ability` and `potential` are imputed by midpoint of the 2023-24 and 2025-26 anchors when both exist (pass-through when only one anchor exists).
+
+### Transfermarkt (per snapshot date)
+- **`players.csv`** → player bio, primary position (`sub_position`), nationality (read as UTF-8 to preserve diacritics)
+- **`player_valuations.csv`** → market value and current club at each snapshot date (nearest datapoint within ±120 days)
+- Primary position sourced from TM `sub_position` mapped to the 8-bucket vocabulary {GK, CB, FB, DM, CM, AM, W, ST}
+- A dedicated bridge (`data/processed/tm_fmi_bridge.csv`) resolves TM ↔ FMI id pairs, with fallback name normalisation (unidecode) and uniqueness guards so that short/common names (Emerson, Gabriel, Thiago, etc.) can't collide across players
+
+### Understat (per season)
+- Minutes, matches, goals, assists, xG, non-penalty xG, xA, xG chain, xG buildup, key passes
+- Converted to per-90 rates during feature engineering
+
+### Position recovery scraper
+A separate TM profile scraper (`tm_scrape_positions.py`) resolves primary position for the ~40 players whose TM `sub_position` wasn't initially joined — reads the "Main position" line directly from each profile page and maps to the 8-bucket vocabulary. Raw HTML is cached for free re-runs.
+
+---
+
+## Feature set (v8slim)
+
+| Group | Count | Examples |
+|---|---:|---|
+| Core numeric | 15 | age, minutes, matches, goals, assists, np_xg_p90, xg_chain_p90, xg_buildup_p90, key_passes_p90, current_ability, potential, months_to_contract_end, n_fm_positions, height_cm, weak_foot |
+| FM technical attributes | 14 | finishing, passing, dribbling, technique, marking, tackling, heading, long_shots, crossing, corners, free_kick_taking, penalty_taking, long_throws, first_touch |
+| FM mental attributes | 14 | composure, decisions, vision, work_rate, positioning, teamwork, anticipation, leadership, concentration, determination, bravery, flair, aggression, off_the_ball |
+| FM physical attributes | 8 | pace, acceleration, strength, stamina, agility, balance, jumping_reach, natural_fitness |
+| FM goalkeeping attributes (GK-gated) | 10 | handling, reflexes, aerial_reach, command_of_area, communication, kicking, one_on_ones, rushing_out, throwing, eccentricity |
+| Age buckets | 2 | is_prime (22-29), is_decline (≥30) |
+| Market-drift features (from PL transfer-window data) | 3 | season_mv_inflation_factor, season_position_mv_inflation_factor, season_fee_mv_premium |
+| Categorical | 3 | primary_position, club, season |
+
+Explicit interaction features (`finishing × is_striker` style) were tested and dropped after SHAP showed the tree ensemble was already capturing them via position-conditional splits.
+
+---
+
+## Modelling
+
+- **Target transform**: `log1p(market_value_eur)` — right-skewed targets benefit from log-space training
+- **Algorithm**: LightGBM, selected over XGBoost and HistGradientBoosting in an Optuna bake-off
+- **Validation**: rolling-window time-series cross-validation — Fold 1 trains on 2023-24 and tests on 2024-25; Fold 2 trains on 2023-24 + 2024-25 and tests on 2025-26
+- **Hyperparameters**: Optuna TPE sampler + MedianPruner, best parameters pinned
+- **Serving model**: trained on all three seasons combined — standard industry practice for time-evolving domains after honest CV, with the acknowledged limitation that performance on a future unseen season would require recalibration if seasonal market dynamics drift materially
+- **Prediction intervals**: conformal recalibration on fold-2 residuals (α=0.20)
+- **Confidence tiers**: UI-level categorisation based on predicted value, player minutes, age, and position availability
+
+---
+
+## Known limitations
+
+1. **Transfermarkt noise ceiling**: TM market values are crowdsourced. Published studies place TM's own variance at ~20-30%. The model's residuals partly reflect this inherent noise rather than modelling error.
+2. **Market drift**: observed +15-25% median market-value inflation from 2024-25 to 2025-26 (confirmed via real PL transfer-window data). Captured partially via drift features; future seasons will need re-recalibration.
+3. **Feature coverage**: a small residual of academy / fringe players are not carried by Transfermarkt's player directory and are excluded from the serving dataset.
 
 ---
 
 ## Repository layout
 
 ```
-pl-insight/
-├── src/value_wage/            # importable package (14 modules, mypy-ready)
-│   ├── config.py              # paths, seeds, feature lists, hyperparam spaces
-│   ├── data.py                # loader + pandera validation + SHA-256 provenance
-│   ├── features.py            # per-90, age², contract, FM aggregates
-│   ├── splits.py              # season split + GroupKFold inner CV
-│   ├── preprocess.py          # ColumnTransformers
-│   ├── models/                # baselines + 4 boosters + quantile companions
-│   ├── tuning.py              # Optuna harness, MLflow logging
-│   ├── calibration.py         # MAPIE conformal wrapper
-│   ├── train.py               # fit → artifact
-│   ├── evaluate.py            # metrics, bootstrap CIs, diagnostic plots
-│   ├── explain.py             # SHAP global + waterfalls
-│   ├── mispricing.py          # ranked board + comparables
-│   ├── export_web.py          # produces the JSON bundle for the UI
-│   ├── sources/
-│   │   ├── transfermarkt.py          # polite TM scraper (unused — Kaggle preferred)
-│   │   └── transfermarkt_kaggle.py   # Kaggle ingest + 4-pass fuzzy join
-│   └── cli.py                 # typer CLI
-├── config/features.yaml       # feature allowlist / excluded list
-├── tests/                     # pytest + hypothesis (28 passing)
+├── config/              # YAML configs (feature list, splits, model params)
 ├── data/
-│   ├── raw/                   # master_fm26_pl.parquet (committed) + Kaggle (gitignored)
-│   └── processed/             # features + model artefacts + predictions
-├── reports/                   # metrics JSON, SHAP CSVs, figures, REPORT.md
-├── web/                       # Deployed to Vercel
-│   ├── index.html             # single-file UI, Chart.js from CDN
-│   ├── placeholder.webp
-│   ├── README.md              # JSON data contract
-│   └── data/
-│       ├── players.json       # per-player predictions + SHAP + bio + career
-│       ├── bio.json           # compact bio-only lookup
-│       ├── meta.json          # model metadata + global SHAP
-│       └── mispricing.json    # top-20 under/over per target
-├── C/                         # Deferred extension: transfer-fee model plan
-├── plan.md                    # Original project plan
-├── techstack.md               # Tool choices + rationale
-├── pyproject.toml
-├── Makefile
-├── LICENSE                    # MIT; dataset attributions inside
-└── README.md                  # this file
+│   ├── raw/             # Source datasets — Transfermarkt dump is gitignored
+│   └── processed/       # Trained models, feature matrices, bridge tables
+├── reports/             # SHAP CSVs, comparison docs, mispricing exports
+├── src/value_wage/      # Library code — features, sources, train, evaluate
+├── tests/               # Pytest suite — split integrity, feature pipeline, no-leakage guards
+├── web/                 # Static single-page UI (vanilla HTML + JS, Chart.js from CDN)
+│   └── data/            # players.json, mispricing.json, meta.json consumed by the UI
+├── Makefile             # One-command targets: ingest, build-features, train, export-web
+├── pyproject.toml       # Project metadata and dependencies
+└── vercel.json          # Static deploy config
 ```
 
 ---
 
-## Setup
-
-**Requirements:** Python 3.11+, Git. ~2 GB free disk (mostly for the Kaggle dump).
+## Local development
 
 ```bash
-git clone https://github.com/<you>/pl-insight.git
-cd pl-insight
+# install
+pip install -e ".[dev]"
 
-# Fresh venv
-python -m venv .venv
-.venv/Scripts/python.exe -m pip install -e ".[dev]"     # Windows
-# source .venv/bin/activate && pip install -e ".[dev]"  # macOS/Linux
+# preview the UI
+python -m http.server 8000 --directory web
+# then open http://localhost:8000/
 ```
 
-### Get the dataset
-
-1. Download `davidcariboo/player-scores` from
-   <https://www.kaggle.com/datasets/davidcariboo/player-scores>
-2. Extract into `data/raw/transfermarkt/` so you have
-   `players.csv`, `transfers.csv`, `player_valuations.csv`, `appearances.csv`,
-   `games.csv`, `clubs.csv`, `competitions.csv`.
-
-### Run the pipeline from scratch
-
-```bash
-# Data
-.venv/Scripts/python.exe -m value_wage.cli data build
-.venv/Scripts/python.exe -m value_wage.cli features build
-
-# Tune each (model, target) pair separately (keeps each run under 10 min)
-for M in lgbm xgb hgbr; do
-  .venv/Scripts/python.exe -m value_wage.cli tune one --target value --model $M --trials 30
-  .venv/Scripts/python.exe -m value_wage.cli tune one --target wage  --model $M --trials 30
-done
-
-# Train the winners
-.venv/Scripts/python.exe -m value_wage.cli train tuned --target value --model lgbm --params-json data/processed/models/value__lgbm__best_params/params.json
-.venv/Scripts/python.exe -m value_wage.cli train tuned --target wage  --model lgbm --params-json data/processed/models/wage__lgbm__best_params/params.json
-
-# Evaluate, calibrate, SHAP, mispricing
-.venv/Scripts/python.exe -m value_wage.cli evaluate run  --target value
-.venv/Scripts/python.exe -m value_wage.cli evaluate run  --target wage
-.venv/Scripts/python.exe -m value_wage.cli calibrate run --target value --model lgbm --method cross
-.venv/Scripts/python.exe -m value_wage.cli calibrate run --target wage  --model lgbm --method cross
-.venv/Scripts/python.exe -m value_wage.cli explain  run  --target value
-.venv/Scripts/python.exe -m value_wage.cli explain  run  --target wage
-.venv/Scripts/python.exe -m value_wage.cli mispricing build --target value
-.venv/Scripts/python.exe -m value_wage.cli mispricing build --target wage
-
-# Export JSON bundle for the web UI
-.venv/Scripts/python.exe -m value_wage.cli export web
-```
-
-Every run is seeded (`SEED=42`); the raw inputs are SHA-256 hashed on
-ingestion; the same inputs produce bit-identical outputs.
-
-### Run the UI locally
-
-```bash
-cd web
-python -m http.server 8765
-# open http://localhost:8765
-```
-
-### Run tests
-
-```bash
-.venv/Scripts/python.exe -m pytest
-```
+Rebuilding the full pipeline from raw data requires the Transfermarkt Kaggle dump (`https://www.kaggle.com/datasets/davidcariboo/player-scores`), FMInside pages for the three FM editions, and Understat per-season aggregates. See `Makefile` for the end-to-end targets.
 
 ---
 
-## Methodology at a glance
+## Tech stack
 
-- **Target:** `log1p(market_value_in_eur)` from Transfermarkt. Two snapshots per
-  `(player, season)` — 01 Aug (start) and 31 May (end) — so the model learns
-  within-season aging and contract decay.
-- **Features (48):** biographical + per-90 performance + volume + 29 FM
-  attributes + 5 FM aggregates + contract months remaining + primary position.
-- **Validation:** train 2023-24, validate 2024-25, test 2025-26.
-- **GroupKFold on `player_id`** inside training folds — same player cannot
-  appear in both inner-train and inner-val.
-- **Pre-declared selection rule:** tune all three boosters under one Optuna
-  recipe (MAE on log target, TPE + MedianPruner), pick the winner on inner-CV
-  log-MAE.
-- **Calibration:** MAPIE cross-conformal (CV+) with GroupKFold → 80% intervals
-  that satisfy the coverage guarantee without sacrificing training data.
-- **SHAP TreeExplainer** on every scored row; global + local attributions
-  shipped in the UI.
-
-See [`reports/REPORT.md`](reports/REPORT.md) for the full write-up including
-validation design, baselines, SHAP analysis, mispricing case studies, and
-limitations.
+Python 3.13 · pandas · scikit-learn · LightGBM · SHAP · Optuna · MAPIE · requests + BeautifulSoup for scraping · pytest for tests · vanilla HTML/JS + Chart.js for the UI · Vercel for static hosting.
 
 ---
 
-## Honest limitations
+## Licence
 
-1. **CatBoost was dropped mid-sweep** for compute budget — a re-run with longer
-   runtime should include it.
-2. **Wage target is still FM-estimated.** Real wages are paywalled (Capology);
-   the wage model is honestly labelled as "FM-estimated wage prediction".
-3. **91% match rate** between the master and Transfermarkt. The 9% unmatched
-   are mostly youth / reserves outside TM's coverage; they remain in the dataset
-   with `null` target.
-4. **Interval widths are wide by design.** Real market values for players with
-   identical measurable features really do vary ~5× multiplicatively. The UI
-   converts the raw width into a confidence tier (High / Moderate / Low)
-   because a scout needs a decision, not a disclaimer.
-5. **Three seasons, one league.** Extending to La Liga or Serie A would require
-   re-tuning the primary-position parser and the club alias dictionary.
-
----
-
-## License
-
-Code: MIT (see [LICENSE](LICENSE)). Dataset attributions and third-party
-trademarks in the same file.
+See `LICENSE`.
