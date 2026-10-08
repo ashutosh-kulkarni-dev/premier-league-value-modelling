@@ -1,3 +1,4 @@
+![CI](https://github.com/ashutosh-kulkarni-dev/premier-league-value-modelling/actions/workflows/ci.yml/badge.svg)
 # PL Insight — Premier League Player Value Model
 
 A regression pipeline and static web UI that predict Premier League players' market values (Transfermarkt €) from on-pitch performance and scouted football attributes, then flag players where the market valuation diverges most from what measurable features predict.
