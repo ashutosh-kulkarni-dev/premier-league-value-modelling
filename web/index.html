@@ -414,7 +414,9 @@ const state = {
     player: '',
     clubs: new Set(),
     positions: new Set(),
-    seasons: new Set(),
+    // Default to only the season we're predicting for (2025-26).
+    // Users can still add other seasons via the filter dropdown.
+    seasons: new Set(['2025-26']),
     verdicts: new Set(),
     minMinutes: null,
     mispMin: null,
@@ -677,9 +679,15 @@ function fmtFull(x, unit) { if (x == null) return '—'; return `${unit}${Math.r
 function escapeHtml(s) { if (s==null) return ''; return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 /* ---------- Mispricing universe (shared) ---------- */
+// Prediction target season. Only this season appears in the dashboard mispricing feed
+// and the dedicated under/over views. Older seasons are kept in players.json for
+// per-player history, but we don't rank mispricings outside the prediction window.
+const PREDICTION_SEASON = '2025-26';
+
 function allScoredRows(target) {
   const out = [];
   for (const r of state.players) {
+    if (r.season !== PREDICTION_SEASON) continue;  // only the predicted season
     const t = r[target];
     if (!t || t.predicted == null || t.actual == null) continue;
     if (t.predicted === 0 || t.actual === 0) continue;
