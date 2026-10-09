@@ -77,14 +77,14 @@
         "foot"
       ],
       "metrics": {
-        "point_r2_log": 0.8651,
-        "point_mae_log": 0.2521,
-        "point_mae_native": 4209217.38,
-        "mean_ape_pct": 43.557,
-        "median_ape_pct": 14.387,
-        "achieved_coverage": 0.7281,
-        "n_test": 993,
-        "note": "Fold-2 holdout: train 2023-24+2024-25, test 2025-26. Computed independently from players.json."
+        "point_r2_log": 0.9106,
+        "point_mae_log": 0.1869,
+        "point_mae_native": 3274454.67,
+        "mean_ape_pct": 30.544,
+        "median_ape_pct": 9.59,
+        "achieved_coverage": 0.8265,
+        "n_test": 997,
+        "note": "Fold-2 holdout: train 2023-24+2024-25, test 2025-26. Includes TM-scraped players."
       },
       "metrics_fold2": {
         "point_r2_log": 0.9183,
@@ -232,13 +232,13 @@
         "foot"
       ],
       "metrics": {
-        "point_r2_log": 0.7245,
-        "point_mae_log": 0.4688,
-        "point_mae_native": 30239.01,
-        "mean_ape_pct": 50.56,
-        "median_ape_pct": 32.33,
-        "n_test": 1020,
-        "note": "Fold-2 holdout: train 2023-24+2024-25, test 2025-26. Computed independently from players.json. Interval coverage dropped — wage quantile heads miscalibrated under current feature set; point predictions only. Interval coverage omitted — wage quantile heads miscalibrated under current feature set; point predictions only."
+        "point_r2_log": 0.5379,
+        "point_mae_log": 0.4531,
+        "point_mae_native": 31910.84,
+        "mean_ape_pct": 46.701,
+        "median_ape_pct": 31.694,
+        "n_test": 946,
+        "note": "Fold-2 holdout: train 2023-24+2024-25, test 2025-26."
       },
       "metrics_fold2": {
         "point_r2_log": 0.7245,
@@ -313,5 +313,5 @@
       ]
     }
   },
-  "honest_recompute_at": "2026-10-09"
+  "honest_recompute_at": "2026-10-09 (post missing-player add)"
 }
