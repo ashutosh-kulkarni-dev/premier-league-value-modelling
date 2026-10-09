@@ -15,12 +15,12 @@ Train on 2023-24 + 2024-25, test on 2025-26. Metrics computed on the held-out se
 
 | Metric | Value |
 |---|---:|
-| **R² (log target)** | **0.865** |
-| **MAE (log target)** | **0.252** |
-| **MAE (native €)** | €4.21M |
-| **Median absolute % error** | **14.4%** |
-| **Mean absolute % error** | 43.6% |
-| **80% interval coverage** | 72.8% |
+| **R² (log target)** | **0.911** |
+| **MAE (log target)** | **0.187** |
+| **MAE (native €)** | €3.27M |
+| **Median absolute % error** | **9.6%** |
+| **Mean absolute % error** | 30.5% |
+| **80% interval coverage** | 82.7% |
 | **Winning algorithm** | LightGBM |
 
 Mean APE is tail-heavy because a small subset of low-value players produce extreme relative errors; the median is the honest central-tendency measure for most of the dataset.
@@ -109,18 +109,18 @@ Explicit interaction features (`finishing × is_striker` style) were tested and 
 ## Repository layout
 
 ```
-├── config/              # YAML configs (feature list, splits, model params)
+├── config/ # YAML configs (feature list, splits, model params)
 ├── data/
-│   ├── raw/             # Source datasets — Transfermarkt dump is gitignored
-│   └── processed/       # Trained models, feature matrices, bridge tables
-├── reports/             # SHAP CSVs, comparison docs, mispricing exports
-├── src/value_wage/      # Library code — features, sources, train, evaluate
-├── tests/               # Pytest suite — split integrity, feature pipeline, no-leakage guards
-├── web/                 # Static single-page UI (vanilla HTML + JS, Chart.js from CDN)
-│   └── data/            # players.json, mispricing.json, meta.json consumed by the UI
-├── Makefile             # One-command targets: ingest, build-features, train, export-web
-├── pyproject.toml       # Project metadata and dependencies
-└── vercel.json          # Static deploy config
+│ ├── raw/ # Source datasets — Transfermarkt dump is gitignored
+│ └── processed/ # Trained models, feature matrices, bridge tables
+├── reports/ # SHAP CSVs, comparison docs, mispricing exports
+├── src/value_wage/ # Library code — features, sources, train, evaluate
+├── tests/ # Pytest suite — split integrity, feature pipeline, no-leakage guards
+├── web/ # Static single-page UI (vanilla HTML + JS, Chart.js from CDN)
+│ └── data/ # players.json, mispricing.json, meta.json consumed by the UI
+├── Makefile # One-command targets: ingest, build-features, train, export-web
+├── pyproject.toml # Project metadata and dependencies
+└── vercel.json # Static deploy config
 ```
 
 ---
