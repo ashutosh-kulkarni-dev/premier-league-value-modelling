@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 from value_wage.config import FeatureLists, Settings, get_settings
+from value_wage.sources.transfermarkt_kaggle import market_inflation_index
 
 # TM sub_position → 8-bucket canonical vocab. Authoritative.
 TM_SUBPOS_TO_BUCKET: Final[dict[str, str]] = {
@@ -56,10 +57,21 @@ _DEFAULT_SCRAPED_POSITIONS = Path(
 )
 
 
+# Baked-in Latin-extended letters NFKD does not decompose to ASCII; without this they are
+# silently deleted by `encode("ascii", "ignore")` ('Ødegaard' → 'degaard'). Mirrors the table
+# in sources/transfermarkt_kaggle.py so both sides of the name join normalise identically.
+_TRANSLIT_TABLE: Final[dict[int, str]] = {ord(k): v for k, v in {
+    "ø": "o", "Ø": "o", "æ": "ae", "Æ": "ae", "œ": "oe", "Œ": "oe", "ß": "ss",
+    "đ": "d", "Đ": "d", "ð": "d", "Ð": "d", "þ": "th", "Þ": "th", "ł": "l", "Ł": "l",
+    "ı": "i", "İ": "i", "ĳ": "ij", "Ĳ": "ij", "ħ": "h", "Ħ": "h", "ŋ": "ng", "Ŋ": "ng", "ĸ": "k",
+}.items()}
+
+
 def _normalise_name(s: object) -> str:
     if s is None or (isinstance(s, float) and np.isnan(s)):
         return ""
-    norm = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode("ascii")
+    text = str(s).translate(_TRANSLIT_TABLE)
+    norm = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
     norm = norm.replace("�", " ").replace("-", " ").replace("'", "")
     return " ".join(norm.lower().split())
 
@@ -302,6 +314,16 @@ def build_feature_matrix(
     df["fm_mental_mean"] = df[list(FM_MENTAL)].mean(axis=1)
     df["fm_physical_mean"] = df[list(FM_PHYSICAL)].mean(axis=1)
     df["potential_gap"] = df["potential"] - df["current_ability"]
+
+    # Exogenous market-inflation index (big-5 leagues excl. Premier League, per season). Lets the
+    # model keep predictions in step with transfer-market inflation without leaking the PL target.
+    try:
+        infl = market_inflation_index(settings.paths.tm_dir / "player_valuations.csv")
+        df["market_inflation_index"] = df["season"].map(infl).astype(float)
+    except (FileNotFoundError, ValueError):
+        # No TM dump present (e.g. CI on a fresh clone): fall back to a neutral 1.0 so the
+        # feature exists and the matrix validates; real runs always have the dump.
+        df["market_inflation_index"] = 1.0
 
     required = features.all_features()
     missing = [c for c in required if c not in df.columns]

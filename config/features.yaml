@@ -64,6 +64,13 @@ shared_numeric:
   - fm_physical_mean
   # contract
   - months_to_contract_end
+  # market context: exogenous transfer-market inflation index (big-5 leagues excl. Premier
+  # League, per season, base 2023-24 = 1.0). Lets the model keep predictions in step with
+  # market inflation, applied non-uniformly across the value distribution (a tree learns to
+  # lift expensive-profile players more than squad players). NOT leaky: built from a population
+  # disjoint from the GB1 targets. See transfermarkt_kaggle.market_inflation_index.
+  # (The PL-derived season_* factors remain banned under `excluded`.)
+  - market_inflation_index
 
 shared_categorical:
   - primary_position
@@ -93,6 +100,13 @@ excluded:
   - value_high
   - sell_value
   - release_clause
+  # Season-level market-value aggregates — LEAK the target. These were a per-season constant
+  # (e.g. 1.0 / 1.3 / 1.6) derived from each season's own market-value level, including the
+  # held-out test season, so they handed the model the test season's price level. Removed from
+  # the model; listed here so the leakage guard fails if anyone reintroduces them.
+  - season_mv_inflation_factor
+  - season_position_mv_inflation_factor
+  - season_fee_mv_premium
   # Metadata / parsed-into / raw strings.
   - league
   - season

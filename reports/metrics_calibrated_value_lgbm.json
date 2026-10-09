@@ -1,0 +1,14 @@
+{
+  "target": "value",
+  "model": "lgbm",
+  "method": "cross",
+  "nominal_coverage": 0.8,
+  "achieved_coverage": 0.8956,
+  "point_r2_log": 0.7794,
+  "point_mae_log": 0.3956,
+  "point_spearman": 0.8735,
+  "median_ape_pct": 27.518,
+  "mean_ape_pct": 49.275,
+  "n_test": 1015,
+  "note": "Season split: train 2023-24+2024-25, test 2025-26. CV+ conformal 80% intervals. No season-inflation leakage; features per config/features.yaml."
+}

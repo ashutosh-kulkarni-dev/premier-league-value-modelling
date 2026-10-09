@@ -13,15 +13,38 @@ import pytest
 from value_wage.config import get_settings
 from value_wage.data import load_master
 from value_wage.sources.transfermarkt_kaggle import (
+    INFLATION_REFERENCE_COMPETITIONS,
+    PL_COMPETITION_ID,
+    _normalise_name,
     build_snapshot_frame,
     join_master_to_tm,
     load_tm_raw,
+    market_inflation_index,
 )
 
 SETTINGS = get_settings()
 TM_DIR = SETTINGS.paths.project_root / "data" / "raw" / "transfermarkt"
 SANCHO_TM_ID = 401173
 DISASI_TM_ID = 386047
+ODEGAARD_TM_ID = 316264
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [
+        ("Martin Ødegaard", "martin odegaard"),   # Ø must fold to o, not vanish
+        ("Albert Grønbæk", "albert gronbaek"),  # ø + æ
+        ("Rasmus Højlund", "rasmus hojlund"),
+        ("Wojciech Szczęsny", "wojciech szczesny"),  # ę is NFKD-decomposable
+        ("Matıas", "matias"),                      # dotless ı
+        ("Pervis Estupiñán", "pervis estupinan"),  # combining diacritics still fine
+    ],
+)
+def test_normalise_name_transliterates_baked_in_latin(raw: str, expected: str) -> None:
+    """Regression: baked-in Latin-extended letters (Ø, æ, ł, ı…) must transliterate, not be
+    deleted by the ascii fold. Deleting them silently broke the TM name join (e.g. Ødegaard
+    → 'degaard', unmatchable against the master's 'odegaard')."""
+    assert _normalise_name(raw) == expected
 
 
 def _dump_present() -> bool:
@@ -83,6 +106,33 @@ def test_disasi_2024_25_end_matches(joined_frame: pd.DataFrame) -> None:
     assert pd.notna(row["join_pass"]), "Disasi 24/25 end snapshot didn't match any pass."
     assert int(row["player_tm_id"]) == DISASI_TM_ID
     # Villa or Chelsea are both acceptable — the snapshot date floats, but the join should land.
+
+
+def test_odegaard_matches_all_snapshots(joined_frame: pd.DataFrame) -> None:
+    """Canary for the Ø-folding bug: TM stores 'Martin Ødegaard', the master 'Martin Odegaard'.
+    Before the _normalise_name transliteration fix the Ø was deleted ('degaard'), so every
+    Ødegaard snapshot missed and he vanished from the UI. All six snapshots must now match."""
+    ode = joined_frame[joined_frame["player"].str.contains("degaard", case=False, na=False)]
+    matched = ode[ode["join_pass"].notna()]
+    assert len(matched) == 6, f"Expected 6 matched Ødegaard snapshots, got {len(matched)}."
+    assert set(matched["player_tm_id"].astype(int)) == {ODEGAARD_TM_ID}
+
+
+def test_inflation_reference_excludes_premier_league() -> None:
+    """The inflation index MUST be built from a population disjoint from the GB1 targets, or it
+    leaks. Guard the reference-competition set so GB1 can never be added to it."""
+    assert PL_COMPETITION_ID not in INFLATION_REFERENCE_COMPETITIONS
+
+
+def test_market_inflation_index_is_base_normalised() -> None:
+    """Index is normalised to the base season = 1.0 and is a non-leaky exogenous signal."""
+    if not _dump_present():
+        pytest.skip("TM Kaggle dump not present.")
+    idx = market_inflation_index(TM_DIR / "player_valuations.csv", base_season="2023-24")
+    assert idx["2023-24"] == 1.0
+    # Market inflated over the window, so later seasons should be >= base (not below).
+    assert idx["2025-26"] >= 1.0
+    assert all(v > 0 for v in idx.values())
 
 
 def test_coverage_is_reasonable(joined_frame: pd.DataFrame) -> None:

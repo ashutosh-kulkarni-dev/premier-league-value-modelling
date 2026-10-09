@@ -37,6 +37,13 @@ import pandas as pd
 
 PL_COMPETITION_ID: Final[str] = "GB1"
 
+# Elite-market inflation reference: the big-5 European leagues MINUS the Premier League (GB1).
+# This population is exogenous to the GB1 players the model predicts, so an inflation index
+# built from it cannot leak the test season's PL market values — unlike a PL-derived season
+# mean, which hands the model the held-out target level. Yet it tracks the same market-wide
+# inflation that lifts PL valuations season to season (median index ≈ 1.0 / 1.4 / 1.6).
+INFLATION_REFERENCE_COMPETITIONS: Final[tuple[str, ...]] = ("ES1", "L1", "IT1", "FR1")
+
 # Each (snapshot_label, month, day) picks the valuation nearest to that date within the season.
 # "start" = pre-season / first window; "end" = season climax, before summer window re-opens.
 SEASON_SNAPSHOTS: Final[tuple[tuple[str, int, int], ...]] = (
@@ -99,16 +106,39 @@ _NAME_DIMINUTIVES: Final[dict[str, str]] = {
 }
 
 
+# Latin-extended letters whose diacritic is *baked in* to a single codepoint, so NFKD does
+# NOT decompose them into an ASCII base + combining mark. Without this map, `encode("ascii",
+# "ignore")` silently DELETES them: 'Ødegaard' → 'degaard', 'Grønbæk' → 'grnbaek', breaking
+# the name join for every Nordic/Slavic/Turkish name. Combining diacritics (é, ñ, å, ü, š, ç)
+# are handled correctly by NFKD and need no entry here.
+_TRANSLIT: Final[dict[str, str]] = {
+    "ø": "o", "Ø": "o",
+    "æ": "ae", "Æ": "ae",
+    "œ": "oe", "Œ": "oe",
+    "ß": "ss",
+    "đ": "d", "Đ": "d", "ð": "d", "Ð": "d",
+    "þ": "th", "Þ": "th",
+    "ł": "l", "Ł": "l",
+    "ı": "i", "İ": "i", "ĳ": "ij", "Ĳ": "ij",
+    "ħ": "h", "Ħ": "h",
+    "ŋ": "ng", "Ŋ": "ng",
+    "ĸ": "k",
+}
+_TRANSLIT_TABLE: Final[dict[int, str]] = {ord(k): v for k, v in _TRANSLIT.items()}
+
+
 def _normalise_name(s: str | float) -> str:
     """ASCII-fold + lowercase + strip hyphens + collapse whitespace.
 
     'José Mourinho' → 'jose mourinho'
     'Smith-Rowe'    → 'smith rowe'
-    'Ødegaard'      → 'odegaard'
+    'Ødegaard'      → 'odegaard'   (via _TRANSLIT; NFKD alone would drop the Ø → 'degaard')
     """
     if s is None or (isinstance(s, float) and np.isnan(s)):
         return ""
-    norm = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode("ascii")
+    # Transliterate baked-in Latin-extended letters BEFORE the ascii fold, or they vanish.
+    text = str(s).translate(_TRANSLIT_TABLE)
+    norm = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("ascii")
     norm = norm.replace("-", " ").replace("'", "").replace(".", "")
     return " ".join(norm.lower().split())
 
@@ -516,6 +546,44 @@ def join_master_to_tm(
         columns=["player_norm", "club_alias", "player_tokens"], errors="ignore"
     )
     return expanded, report
+
+
+def market_inflation_index(
+    tm_valuations_csv: Path | str,
+    *,
+    base_season: str = "2023-24",
+    competitions: tuple[str, ...] = INFLATION_REFERENCE_COMPETITIONS,
+) -> dict[str, float]:
+    """Per-season transfer-market inflation index from an EXOGENOUS population.
+
+    Median market value per season across `competitions` (the big-5 leagues minus the Premier
+    League), normalised so `base_season` = 1.0. Because the reference population excludes GB1,
+    the index for the held-out season is NOT derived from the PL targets the model predicts —
+    it is a market-wide inflation signal available at prediction time, so it is safe to use as
+    a feature. Contrast with `season_mv_inflation_factor` (banned in features.yaml), which was
+    a PL-cohort season mean and therefore leaked the test label.
+
+    Returns {season: factor} for the seasons in SEASON_RANGES.
+    """
+    v = pd.read_csv(
+        tm_valuations_csv,
+        low_memory=False,
+        usecols=["date", "market_value_in_eur", "player_club_domestic_competition_id"],
+    )
+    v["date"] = pd.to_datetime(v["date"], errors="coerce")
+    v = v.dropna(subset=["date", "market_value_in_eur"])
+    v = v[v["player_club_domestic_competition_id"].isin(competitions)]
+    levels: dict[str, float] = {}
+    for season, (lo, hi) in SEASON_RANGES.items():
+        d = v[(v["date"] >= lo) & (v["date"] <= hi)]
+        levels[season] = float(d["market_value_in_eur"].median()) if len(d) else float("nan")
+    base = levels.get(base_season)
+    if not base or pd.isna(base):
+        raise ValueError(
+            f"No inflation-reference valuations for base season {base_season!r} in "
+            f"competitions {competitions}. Cannot build the market inflation index."
+        )
+    return {season: round(level / base, 4) for season, level in levels.items()}
 
 
 def build_tm_target_frame(
