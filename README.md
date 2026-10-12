@@ -4,9 +4,6 @@
 A regression pipeline and static web UI that predict Premier League players' **market value** (Transfermarkt €) and **weekly wage** from on-pitch performance and scouted football attributes, then flag players where the market diverges most from what measurable features predict.
 
 > **Live demo:** https://premier-league-value-modelling-web.vercel.app/
-
-The project treats the model's **residuals as insight**, not as errors to minimise — residuals quantify the "human premium" that mechanical features can't see: manager demand, auction dynamics, expiring contracts, injury rumours, hype. The mispricing board is a tool for investigation, not a declaration of market error.
-
 ---
 
 ## Headline metrics (honest season holdout)
