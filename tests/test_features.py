@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime
 
-import numpy as np
 import pandas as pd
 import pytest
 from hypothesis import given, settings
@@ -13,28 +12,8 @@ from hypothesis import strategies as st
 from value_wage.features import (
     encode_foot,
     months_to_contract_end,
-    parse_primary_position,
     per_90,
 )
-
-
-class TestParsePrimaryPosition:
-    def test_single_code(self) -> None:
-        out = parse_primary_position(pd.Series(["GK", "DC", "ST"]))
-        assert out.tolist() == ["GK", "CB", "ST"]
-
-    def test_multi_code_priority(self) -> None:
-        # GK beats everything; CB beats FB; W beats AM? No — AMC maps to AM, AML/AMR map to W.
-        out = parse_primary_position(pd.Series(["GK,ST", "DC,DM,MC", "AMR,MR,ST"]))
-        assert out.tolist() == ["GK", "CB", "W"]
-
-    def test_null_and_empty(self) -> None:
-        out = parse_primary_position(pd.Series([None, "", "   ", np.nan], dtype=object))
-        assert out.isna().all()
-
-    def test_unknown_code(self) -> None:
-        out = parse_primary_position(pd.Series(["XYZ"]))
-        assert out.isna().all()
 
 
 class TestPer90:

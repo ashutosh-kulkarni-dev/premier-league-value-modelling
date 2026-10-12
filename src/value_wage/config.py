@@ -47,7 +47,7 @@ class Paths(BaseModel):
 
 
 Target = Literal["value", "wage"]
-Model = Literal["dummy", "ridge", "elasticnet", "rf", "lgbm", "xgb", "catboost", "hgbr"]
+Model = Literal["ridge", "elasticnet", "rf", "lgbm", "xgb", "catboost", "hgbr"]
 ALL_TARGETS: tuple[Target, ...] = ("value", "wage")
 ALL_BOOSTERS: tuple[Model, ...] = ("lgbm", "xgb", "catboost", "hgbr")
 # Simple reference models the production GBM must beat: a regularized linear model with built-in

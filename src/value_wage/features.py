@@ -168,19 +168,6 @@ def apply_scraper_fallback(
     return out
 
 
-def count_fm_positions(positions: pd.Series) -> pd.Series:
-    def _count(raw: object) -> float:
-        if raw is None or (isinstance(raw, float) and np.isnan(raw)):
-            return float("nan")
-        s = str(raw).strip()
-        if not s or s.lower() in {"nan", "none", "null"}:
-            return float("nan")
-        toks = {c.strip().upper() for c in re.split(r"[,/;|\s]+", s) if c.strip()}
-        return float(len(toks)) if toks else float("nan")
-
-    return positions.map(_count).astype(float)
-
-
 FM_TECHNICAL: Final[tuple[str, ...]] = (
     "crossing", "dribbling", "finishing", "first_touch", "heading", "long_shots",
     "marking", "passing", "tackling", "technique",
@@ -193,32 +180,6 @@ FM_MENTAL: Final[tuple[str, ...]] = (
 FM_PHYSICAL: Final[tuple[str, ...]] = (
     "acceleration", "pace", "stamina", "strength", "jumping_reach",
 )
-
-
-def parse_primary_position(positions: pd.Series) -> pd.Series:
-    """Legacy FM parser — kept for back-compat but no longer the authoritative source."""
-    POSITION_BUCKETS = (
-        ("GK", ("GK", "G")),
-        ("CB", ("DC", "D")),
-        ("FB", ("DL", "DR", "WBL", "WBR", "WB")),
-        ("DM", ("DM",)),
-        ("CM", ("MC", "M")),
-        ("W", ("AML", "AMR", "ML", "MR", "W")),
-        ("AM", ("AMC", "AM")),
-        ("ST", ("ST", "F", "S")),
-    )
-    def classify(raw: object) -> str | None:
-        if raw is None or (isinstance(raw, float) and np.isnan(raw)):
-            return None
-        s = str(raw).strip()
-        if not s:
-            return None
-        codes = {c.strip() for c in re.split(r"[,\s]+", s) if c.strip()}
-        for bucket, members in POSITION_BUCKETS:
-            if codes & set(members):
-                return bucket
-        return None
-    return positions.map(classify).astype("string")
 
 
 def months_to_contract_end(contract_until: pd.Series, *, reference: datetime | None = None) -> pd.Series:
@@ -304,9 +265,6 @@ def build_feature_matrix(
     else:
         df["primary_position"] = pd.Series([pd.NA] * len(df), index=df.index, dtype="string")
     df = apply_scraper_fallback(df)
-
-    # Secondary: FM positional versatility (not for primary bucket).
-    df["n_fm_positions"] = count_fm_positions(df["positions"])
 
     df["foot"] = encode_foot(df["foot"])
 

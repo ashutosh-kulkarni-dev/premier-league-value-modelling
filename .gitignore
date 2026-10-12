@@ -48,8 +48,10 @@ logs/
 *.log
 *.tmp
 
-# Backup from port of integration_v7 (local only)
+# Local-only backup directories (never commit these)
 _backup_pre_port/
+_backup_pre_rebuild/
+_backup_*/
 
 # Local backup files
 *.bak
