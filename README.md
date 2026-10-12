@@ -108,6 +108,24 @@ Club and season identifiers are deliberately **excluded** — they'd absorb the 
 - **Prediction intervals**: MAPIE **cross-conformal (CV+)** over train+val at α = 0.20 — distribution-free 80% intervals that actually achieve ~88–90% empirical coverage (the raw LightGBM quantile intervals under-covered at ~40%).
 - **Leakage guards**: the target and FM money fields (`value_high`, `sell_value`, `release_clause`) and the PL-derived season factors are all excluded and asserted by both the training path (`_assert_no_leakage`) and the test suite.
 
+### Baselines
+
+The production GBM is benchmarked against two simpler reference models on the same features, split, and `log1p` target, plus a per-position-median sanity floor:
+
+- **ElasticNet** (regularized linear, self-tuned `alpha` + `l1_ratio` over GroupKFold) — L2 absorbs the many correlated features; L1 zeros out irrelevant ones (on wage it keeps only ~14 of 63 encoded coefficients).
+- **Random Forest** (bagged trees) — nonlinearity without boosting.
+
+Held-out 2025-26 R² (log target) — the ladder behaves as expected, and LightGBM earns its place:
+
+| Model | Value R² | Wage R² |
+|---|---:|---:|
+| Median-by-position (floor) | 0.05 | −0.07 |
+| ElasticNet | 0.73 | 0.75 |
+| Random Forest | 0.70 | 0.80 |
+| **LightGBM (production)** | **0.78** | **0.84** |
+
+Reproduce with `vw compare run --target value|wage` (writes `reports/model_comparison_{target}.{csv,md}`).
+
 ---
 
 ## Known limitations

@@ -1,7 +1,7 @@
 PY := .venv/Scripts/python.exe
 VW := $(PY) -m value_wage.cli
 
-.PHONY: help install data features train tune evaluate explain mispricing calibrate export serve test lint type clean all
+.PHONY: help install data features train baselines tune evaluate compare explain mispricing calibrate export serve test lint type clean all
 
 help:
 	@echo "Targets:"
@@ -11,7 +11,9 @@ help:
 	@echo "  train       Train one booster per target with default params (quick smoke run)"
 	@echo "  tune TARGET=value MODEL=lgbm TRIALS=30   Optuna tune a single model/target"
 	@echo "  tune-all    Tune all boosters for both targets (slow)"
+	@echo "  baselines   Fit ElasticNet + Random Forest reference models (both targets)"
 	@echo "  evaluate    Evaluate the selected winning models on the test split"
+	@echo "  compare     Baseline vs production comparison table (both targets)"
 	@echo "  calibrate   Fit MAPIE conformal intervals (--method cross)"
 	@echo "  explain     Produce SHAP global + local plots"
 	@echo "  mispricing  Produce the mispricing board CSVs"
@@ -41,9 +43,19 @@ tune:
 tune-all:
 	$(VW) tune all --trials 50
 
+baselines:
+	$(VW) train baseline --target value --model elasticnet
+	$(VW) train baseline --target value --model rf
+	$(VW) train baseline --target wage --model elasticnet
+	$(VW) train baseline --target wage --model rf
+
 evaluate:
 	$(VW) evaluate run --target value
 	$(VW) evaluate run --target wage
+
+compare:
+	$(VW) compare run --target value
+	$(VW) compare run --target wage
 
 explain:
 	$(VW) explain run --target value

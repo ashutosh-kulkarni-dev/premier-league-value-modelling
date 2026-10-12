@@ -1,0 +1,10 @@
+# Model comparison — wage
+
+Held-out test season ('2025-26',) (n=1008). Trained on ('2023-24', '2024-25'). Same feature allowlist and `log1p` target for every model.
+
+| model | r2_log | mae_log | mae_native | median_ape_pct | mean_ape_pct | spearman |
+|---|---|---|---|---|---|---|
+| lgbm (production) | 0.8392 | 0.2642 | 15355.0 | 13.47 | 50.98 | 0.9338 |
+| rf | 0.8016 | 0.3191 | 20363.0 | 19.06 | 65.97 | 0.9107 |
+| elasticnet | 0.7543 | 0.3877 | 27350.0 | 25.5 | 72.04 | 0.8628 |
+| median_by_position | -0.0714 | 0.7665 | 51677.0 | 45.45 | 659.82 | 0.0875 |

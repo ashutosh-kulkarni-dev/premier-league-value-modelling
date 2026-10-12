@@ -43,6 +43,12 @@ def build_model(name: Model, **params: Any) -> BaseEstimator:
     if name == "ridge":
         from value_wage.models.baselines import ridge_regressor
         return ridge_regressor(**params)
+    if name == "elasticnet":
+        from value_wage.models.baselines import elasticnet_regressor
+        return elasticnet_regressor(**params)
+    if name == "rf":
+        from value_wage.models.baselines import random_forest_regressor
+        return random_forest_regressor(**params)
     raise ValueError(f"Unknown model name: {name!r}")
 
 

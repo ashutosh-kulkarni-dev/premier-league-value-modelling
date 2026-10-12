@@ -47,9 +47,12 @@ class Paths(BaseModel):
 
 
 Target = Literal["value", "wage"]
-Model = Literal["dummy", "ridge", "lgbm", "xgb", "catboost", "hgbr"]
+Model = Literal["dummy", "ridge", "elasticnet", "rf", "lgbm", "xgb", "catboost", "hgbr"]
 ALL_TARGETS: tuple[Target, ...] = ("value", "wage")
 ALL_BOOSTERS: tuple[Model, ...] = ("lgbm", "xgb", "catboost", "hgbr")
+# Simple reference models the production GBM must beat: a regularized linear model with built-in
+# feature selection (ElasticNet) and a bagged-tree model (Random Forest).
+ALL_BASELINES: tuple[Model, ...] = ("elasticnet", "rf")
 
 TARGET_COLUMN: dict[Target, str] = {"value": "market_value_eur", "wage": "wage_pw"}
 # The value target is Transfermarkt's `market_value_in_eur` snapshot (joined via sources/transfermarkt_kaggle.py).

@@ -19,7 +19,15 @@ from rich.console import Console
 from rich.table import Table
 
 from value_wage.calibration import calibrate
-from value_wage.config import ALL_BOOSTERS, ALL_TARGETS, TARGET_COLUMN, Model, Target, get_settings
+from value_wage.config import (
+    ALL_BASELINES,
+    ALL_BOOSTERS,
+    ALL_TARGETS,
+    TARGET_COLUMN,
+    Model,
+    Target,
+    get_settings,
+)
 from value_wage.data import copy_from_scout_pipeline, load_master, load_master_with_tm
 from value_wage.evaluate import (
     bootstrap_metric_ci,
@@ -33,8 +41,15 @@ from value_wage.explain import explain_tree_model, save_global_summary_plot, sav
 from value_wage.export_web import export as export_web_bundle
 from value_wage.features import build_feature_matrix
 from value_wage.mispricing import build_board
+from value_wage.models.baselines import median_by_position
 from value_wage.splits import make_splits
-from value_wage.train import TrainedArtifact, _normalize_na, predict, train_booster
+from value_wage.train import (
+    TrainedArtifact,
+    _normalize_na,
+    predict,
+    train_baseline,
+    train_booster,
+)
 from value_wage.tuning import tune
 
 app = typer.Typer(
@@ -53,6 +68,7 @@ misp_app = typer.Typer(help="Mispricing board.")
 
 calib_app = typer.Typer(help="Conformal interval calibration.")
 export_app = typer.Typer(help="Export results for a static HTML UI.")
+compare_app = typer.Typer(help="Baseline vs production model comparison.")
 
 app.add_typer(data_app, name="data")
 app.add_typer(feat_app, name="features")
@@ -63,6 +79,7 @@ app.add_typer(explain_app, name="explain")
 app.add_typer(misp_app, name="mispricing")
 app.add_typer(calib_app, name="calibrate")
 app.add_typer(export_app, name="export")
+app.add_typer(compare_app, name="compare")
 
 console = Console()
 
@@ -162,6 +179,24 @@ def train_quick(
     console.print(f"[green]OK[/green] saved -> {out}")
 
 
+@train_app.command("baseline")
+@_guard
+def train_baseline_cmd(
+    target: Target = typer.Option("value", help="value or wage"),
+    model: Model = typer.Option("elasticnet", help="elasticnet | rf"),
+) -> None:
+    """Fit a reference baseline (ElasticNet / Random Forest) and persist it."""
+    if model not in ALL_BASELINES:
+        raise typer.BadParameter(f"--model must be one of {ALL_BASELINES}, got {model!r}.")
+    settings = get_settings()
+    features = _load_features_or_build()
+    artifact = train_baseline(model, target, features, settings=settings)
+    out = settings.paths.models_dir / f"{target}__{model}__baseline"
+    artifact.to_dir(out)
+    console.print(f"[green]OK[/green] {model}/{target} baseline -> {out}")
+    console.print(f"  chosen params: {artifact.best_params}")
+
+
 @train_app.command("tuned")
 @_guard
 def train_tuned(
@@ -255,12 +290,12 @@ def _winner_artifact_dir(target: Target) -> Path | None:
 def _resolve_artifact_dir(target: Target, model: Model | None) -> Path:
     settings = get_settings()
     if model:
-        for suffix in ("tuned", "quick"):
+        for suffix in ("tuned", "quick", "baseline"):
             cand = settings.paths.models_dir / f"{target}__{model}__{suffix}"
             if cand.exists():
                 return cand
         raise FileNotFoundError(f"No saved artifact for target={target}, model={model}.")
-    for suffix in ("tuned", "quick"):
+    for suffix in ("tuned", "quick", "baseline"):
         for mdl in ALL_BOOSTERS:
             cand = settings.paths.models_dir / f"{target}__{mdl}__{suffix}"
             if cand.exists():
@@ -524,6 +559,90 @@ def export_web(model_name: str = typer.Option("lgbm", help="Which tuned model to
     console.print(f"[green]OK[/green] meta       -> {bundle.meta_path}")
     console.print(f"[green]OK[/green] mispricing -> {bundle.mispricing_path}")
     console.print(f"[green]OK[/green] bio        -> {bundle.bio_path}")
+
+
+# ---------------- compare ----------------
+
+@compare_app.command("run")
+@_guard
+def compare_run(
+    target: Target = typer.Option("value", help="value or wage"),
+) -> None:
+    """Score the baselines and the production LightGBM on the held-out test season, side by side.
+
+    Reference ladder: per-position median floor -> ElasticNet -> Random Forest -> LightGBM.
+    Writes `reports/model_comparison_{target}.{csv,md}` and prints the table.
+    """
+    settings = get_settings()
+    features = _load_features_or_build()
+    target_col = TARGET_COLUMN[target]
+    split = make_splits(features, target, cfg=settings.split)
+    fit_frame = pd.concat([split.train, split.val], axis=0, ignore_index=True)
+    y_true_log = np.log1p(split.test[target_col].to_numpy(dtype=float))
+    actual = np.expm1(y_true_log)
+
+    def _row(name: str, pred_log: np.ndarray) -> dict[str, object]:
+        m = compute_metrics(y_true_log, np.asarray(pred_log, dtype=float))
+        pred_native = np.expm1(np.asarray(pred_log, dtype=float))
+        mean_ape = float(np.mean(np.abs(pred_native - actual) / np.maximum(actual, 1.0)))
+        return {
+            "model": name,
+            "r2_log": round(m.r2_log, 4),
+            "mae_log": round(m.mae_log, 4),
+            "mae_native": round(float(np.mean(np.abs(pred_native - actual))), 0),
+            "median_ape_pct": round(m.median_abs_pct_error * 100, 2),
+            "mean_ape_pct": round(mean_ape * 100, 2),
+            "spearman": round(m.spearman, 4),
+        }
+
+    rows: list[dict[str, object]] = []
+
+    # 1) Sanity floor: per-position median of the log target.
+    floor = median_by_position()
+    floor.fit(fit_frame, np.log1p(fit_frame[target_col].to_numpy(dtype=float)))
+    rows.append(_row("median_by_position", floor.predict(split.test)))
+
+    # 2) Baselines (trained fresh on train+val).
+    for mdl in ALL_BASELINES:
+        console.print(f"[cyan]Fitting baseline {mdl}...[/cyan]")
+        art = train_baseline(mdl, target, features, settings=settings)
+        rows.append(_row(mdl, predict(art, split.test)["pred"]))
+
+    # 3) Production model, if present.
+    lgbm_dir = settings.paths.models_dir / f"{target}__lgbm__tuned"
+    if lgbm_dir.exists():
+        art = TrainedArtifact.from_dir(lgbm_dir)
+        rows.append(_row("lgbm (production)", predict(art, split.test)["pred"]))
+    else:
+        console.print("[yellow]No tuned LightGBM found; comparing baselines only.[/yellow]")
+
+    df = pd.DataFrame(rows).sort_values("r2_log", ascending=False).reset_index(drop=True)
+    settings.paths.reports_dir.mkdir(parents=True, exist_ok=True)
+    csv_path = settings.paths.reports_dir / f"model_comparison_{target}.csv"
+    md_path = settings.paths.reports_dir / f"model_comparison_{target}.md"
+    df.to_csv(csv_path, index=False)
+    header = (
+        f"# Model comparison — {target}\n\n"
+        f"Held-out test season {settings.split.test_seasons} "
+        f"(n={len(y_true_log)}). Trained on {settings.split.train_seasons + settings.split.val_seasons}. "
+        "Same feature allowlist and `log1p` target for every model.\n\n"
+    )
+    cols = list(df.columns)
+    md_lines = [
+        "| " + " | ".join(cols) + " |",
+        "|" + "|".join("---" for _ in cols) + "|",
+        *["| " + " | ".join(str(r[c]) for c in cols) + " |" for _, r in df.iterrows()],
+    ]
+    md_path.write_text(header + "\n".join(md_lines) + "\n", encoding="utf-8")
+
+    tbl = Table(title=f"Model comparison — {target} (test {settings.split.test_seasons[0]})")
+    for col in df.columns:
+        tbl.add_column(col)
+    for _, r in df.iterrows():
+        tbl.add_row(*[str(r[c]) for c in df.columns])
+    console.print(tbl)
+    console.print(f"[green]OK[/green] -> {csv_path}")
+    console.print(f"[green]OK[/green] -> {md_path}")
 
 
 if __name__ == "__main__":

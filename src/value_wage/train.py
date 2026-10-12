@@ -20,8 +20,8 @@ from sklearn.compose import ColumnTransformer
 from value_wage.config import TARGET_COLUMN, Model, Settings, Target, get_settings
 from value_wage.features import feature_lists_for
 from value_wage.models.base import build_model, build_quantile_model
-from value_wage.preprocess import make_booster_preprocessor
-from value_wage.splits import make_splits
+from value_wage.preprocess import make_booster_preprocessor, make_linear_preprocessor
+from value_wage.splits import group_kfold_indices, make_splits
 
 
 @dataclass
@@ -102,10 +102,19 @@ def _normalize_na(frame: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
-def _apply(preprocessor: ColumnTransformer, frame: pd.DataFrame, feature_names: list[str]) -> pd.DataFrame:
-    X = frame[feature_names] if all(c in frame.columns for c in feature_names) else frame.copy()
-    arr = preprocessor.transform(_normalize_na(X[feature_names]))
-    return pd.DataFrame(arr, columns=feature_names, index=frame.index)
+def _apply(
+    preprocessor: ColumnTransformer, frame: pd.DataFrame, feature_names: list[str]
+) -> pd.DataFrame | np.ndarray:
+    """Transform `frame` for prediction.
+
+    The booster preprocessor preserves column identity (ordinal encode → width == len(names)),
+    so we wrap it as a named DataFrame (LightGBM aligns on feature names). The linear/one-hot
+    baseline preprocessor expands the width, so there the array is returned as-is for the model.
+    """
+    arr = preprocessor.transform(_normalize_na(frame[feature_names]))
+    if arr.shape[1] == len(feature_names):
+        return pd.DataFrame(arr, columns=feature_names, index=frame.index)
+    return arr
 
 
 def _assert_no_leakage(
@@ -182,6 +191,65 @@ def train_booster(
         numeric_cols=numeric_cols,
         categorical_cols=categorical_cols,
         best_params=params,
+    )
+
+
+def train_baseline(
+    model_name: Model,
+    target: Target,
+    features: pd.DataFrame,
+    *,
+    params: dict[str, Any] | None = None,
+    settings: Settings | None = None,
+) -> TrainedArtifact:
+    """Fit a simple reference model (ElasticNet / Random Forest) on train+val.
+
+    Shares the feature allowlist, split, leakage guard, and `log1p` target with the boosters,
+    but uses the linear preprocessor (median-impute + scale + one-hot — scaling is required by
+    ElasticNet and harmless for the forest) and fits no quantile companions. ElasticNet self-
+    tunes `alpha`/`l1_ratio` over GroupKFold folds on `player_id`. Returns a `TrainedArtifact`
+    so `predict`, `evaluate`, and the comparison table treat it like any other model.
+    """
+    settings = settings or get_settings()
+    feature_lists = settings.load_features()
+    numeric_cols, categorical_cols = feature_lists_for(target, feature_lists)
+    _assert_no_leakage(numeric_cols, categorical_cols, feature_lists.excluded)
+    target_col = TARGET_COLUMN[target]
+    params = dict(params or {})
+
+    split = make_splits(features, target, cfg=settings.split)
+    fit_frame = pd.concat([split.train, split.val], axis=0, ignore_index=True)
+
+    pre = make_linear_preprocessor(numeric_cols, categorical_cols)
+    X_fit = pre.fit_transform(_normalize_na(fit_frame[[*numeric_cols, *categorical_cols]]))
+    y_fit = np.log1p(fit_frame[target_col].to_numpy(dtype=float))
+
+    # ElasticNet cross-validates over GroupKFold-by-player folds unless the caller fixed `cv`.
+    if model_name == "elasticnet" and "cv" not in params:
+        params["cv"] = group_kfold_indices(fit_frame, n_splits=settings.split.inner_cv_folds)
+
+    model = build_model(model_name, **params)
+    model.fit(X_fit, y_fit)
+
+    # Record the params actually used (ElasticNetCV picks these at fit time).
+    chosen: dict[str, Any] = {}
+    if hasattr(model, "alpha_"):
+        chosen["alpha"] = float(model.alpha_)
+    if hasattr(model, "l1_ratio_"):
+        chosen["l1_ratio"] = float(model.l1_ratio_)
+    if not chosen:
+        chosen = {k: v for k, v in params.items() if k != "cv"}
+
+    return TrainedArtifact(
+        model_name=model_name,
+        target=target,
+        preprocessor=pre,
+        model=model,
+        quantile_lower=None,
+        quantile_upper=None,
+        numeric_cols=numeric_cols,
+        categorical_cols=categorical_cols,
+        best_params=chosen,
     )
 
 
