@@ -1,8 +1,7 @@
 """Thin factories around LightGBM, XGBoost, CatBoost, and sklearn HistGradientBoosting.
 
 Each factory accepts the Optuna search-space keys verbatim; defaults are sensible for a
-~1.5k-row tabular regression problem. Quantile variants are separate factories so the
-objective-specific knobs are explicit.
+~1.5k-row tabular regression problem.
 """
 
 from __future__ import annotations
@@ -44,10 +43,6 @@ def build_lgbm(**params: Any) -> LGBMRegressor:
     return LGBMRegressor(**_lgbm_defaults(**params))
 
 
-def build_lgbm_quantile(alpha: float, **params: Any) -> LGBMRegressor:
-    return LGBMRegressor(**_lgbm_defaults(objective="quantile", alpha=alpha, metric="quantile", **params))
-
-
 def _xgb_defaults(**overrides: Any) -> dict[str, Any]:
     base: dict[str, Any] = {
         "n_estimators": N_ESTIMATORS,
@@ -74,17 +69,6 @@ def build_xgb(**params: Any) -> XGBRegressor:
     return XGBRegressor(**_xgb_defaults(**params))
 
 
-def build_xgb_quantile(alpha: float, **params: Any) -> XGBRegressor:
-    return XGBRegressor(
-        **_xgb_defaults(
-            objective="reg:quantileerror",
-            quantile_alpha=alpha,
-            eval_metric="mae",
-            **params,
-        )
-    )
-
-
 def _catboost_defaults(**overrides: Any) -> dict[str, Any]:
     base: dict[str, Any] = {
         "iterations": N_ESTIMATORS,
@@ -109,17 +93,6 @@ def build_catboost(**params: Any) -> Any:
     return CatBoostRegressor(**_catboost_defaults(**params))
 
 
-def build_catboost_quantile(alpha: float, **params: Any) -> Any:
-    from catboost import CatBoostRegressor
-    return CatBoostRegressor(
-        **_catboost_defaults(
-            loss_function=f"Quantile:alpha={alpha}",
-            eval_metric=f"Quantile:alpha={alpha}",
-            **params,
-        )
-    )
-
-
 def _hgbr_defaults(**overrides: Any) -> dict[str, Any]:
     base: dict[str, Any] = {
         "loss": "absolute_error",
@@ -139,9 +112,3 @@ def _hgbr_defaults(**overrides: Any) -> dict[str, Any]:
 
 def build_hgbr(**params: Any) -> HistGradientBoostingRegressor:
     return HistGradientBoostingRegressor(**_hgbr_defaults(**params))
-
-
-def build_hgbr_quantile(alpha: float, **params: Any) -> HistGradientBoostingRegressor:
-    return HistGradientBoostingRegressor(
-        **_hgbr_defaults(loss="quantile", quantile=alpha, **params)
-    )

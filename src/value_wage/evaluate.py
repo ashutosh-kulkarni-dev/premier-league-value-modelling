@@ -130,18 +130,6 @@ def plot_residuals(
     plt.close(fig)
 
 
-def interval_coverage(
-    y_true_log: np.ndarray,
-    lower_log: np.ndarray,
-    upper_log: np.ndarray,
-) -> float:
-    """Fraction of actuals that fall inside the predicted interval."""
-    if not (len(y_true_log) == len(lower_log) == len(upper_log)):
-        raise ValueError("Length mismatch between y_true, lower, upper.")
-    inside = (y_true_log >= lower_log) & (y_true_log <= upper_log)
-    return float(inside.mean())
-
-
 def summarise_predictions(
     frame: pd.DataFrame,
     y_true_log: np.ndarray,

@@ -1,9 +1,8 @@
 """Mispricing board + similarity (comparables) engine.
 
-The board ranks test-season players by `(actual − predicted) / sigma_pred`, where
-`sigma_pred` is derived from the 80% quantile interval (upper − lower) / 2.56. This
-turns "€20M below prediction" into a z-like score that is comparable across the
-value spectrum.
+The board ranks test-season players by `(actual − predicted) / sigma`, where `sigma` is a
+single global standard deviation of the log residuals. This turns "€20M below prediction"
+into a z-like score that is comparable across the value spectrum.
 """
 
 from __future__ import annotations
@@ -33,27 +32,18 @@ class MispricingBoard:
 def build_board(
     predictions: pd.DataFrame,
     *,
-    lower_log: np.ndarray | None = None,
-    upper_log: np.ndarray | None = None,
     top_n: int = 20,
 ) -> MispricingBoard:
     """Rank by signed z-score of (actual − predicted) on the log scale.
 
-    `predictions` must contain `actual_log`, `pred_log`. If `lower_log`/`upper_log` are
-    passed, sigma is (upper − lower) / 2.5631 (80% interval under a normal). Otherwise
-    a global sigma is used (useful before quantile models are fit).
+    `predictions` must contain `actual_log`, `pred_log`. Sigma is a single global standard
+    deviation of the log residuals, so the z-score only rescales the ranking uniformly.
     """
     df = predictions.copy()
     df["residual_log"] = df["actual_log"] - df["pred_log"]  # positive → market pays more than model
-    if lower_log is not None and upper_log is not None:
-        if not (len(df) == len(lower_log) == len(upper_log)):
-            raise ValueError("Prediction/interval length mismatch.")
-        sigma = (np.asarray(upper_log) - np.asarray(lower_log)) / 2.5631
-        sigma = np.where(sigma <= 0, np.nan, sigma)
-    else:
-        sigma = np.full(len(df), float(np.std(df["residual_log"].to_numpy())))
+    sigma = max(float(np.std(df["residual_log"].to_numpy())), 1e-9)
     df["sigma_log"] = sigma
-    df["z"] = df["residual_log"] / df["sigma_log"]
+    df["z"] = df["residual_log"] / sigma
 
     df_sorted = df.sort_values("z")  # most negative z = overvalued by model (predicted > actual)
     # Convention: "undervalued" = market pays LESS than model (actual < pred), z < 0.

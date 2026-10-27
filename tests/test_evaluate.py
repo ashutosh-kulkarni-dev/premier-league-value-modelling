@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from value_wage.evaluate import bootstrap_metric_ci, compute_metrics, interval_coverage
+from value_wage.evaluate import bootstrap_metric_ci, compute_metrics
 
 
 def test_metrics_on_perfect_fit() -> None:
@@ -27,15 +27,3 @@ def test_bootstrap_mae_covers_point() -> None:
     point, lo, hi = bootstrap_metric_ci(y_true, y_pred, metric="mae", n_bootstrap=200)
     assert lo <= point <= hi
     assert hi - lo > 0
-
-
-def test_interval_coverage_bounds() -> None:
-    y = np.array([1.0, 2.0, 3.0])
-    lower = np.array([0.5, 1.5, 2.5])
-    upper = np.array([1.5, 2.5, 3.5])
-    assert interval_coverage(y, lower, upper) == 1.0
-
-
-def test_interval_coverage_length_mismatch() -> None:
-    with pytest.raises(ValueError):
-        interval_coverage(np.array([1.0]), np.array([0.0]), np.array([1.0, 2.0]))

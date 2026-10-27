@@ -1,7 +1,7 @@
 """Baselines that the real model must beat.
 
 - `median_by_position`: predicts the per-position median of the (log) target. The sanity floor.
-- `ridge_pipeline`: the competent linear benchmark; a win over this justifies the GBM.
+- `ridge_regressor`: the competent linear benchmark; a win over this justifies the GBM.
 - `elasticnet_regressor`: regularized linear with built-in feature selection — the headline
   linear baseline. L2 handles the many correlated features; L1 zeros out irrelevant ones.
 - `random_forest_regressor`: bagged-tree baseline — nonlinearity without boosting.
@@ -15,9 +15,6 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import ElasticNetCV, Ridge
-from sklearn.pipeline import Pipeline
-
-from value_wage.preprocess import make_linear_preprocessor
 
 
 class PositionMedianRegressor:
@@ -50,24 +47,10 @@ def median_by_position() -> PositionMedianRegressor:
 
 
 def ridge_regressor(**params: Any) -> Ridge:
-    """Bare ridge (without the preprocessor). Use `ridge_pipeline` to get the full pipeline."""
+    """Bare ridge regressor (the preprocessor is applied separately by the training path)."""
     defaults = {"alpha": 1.0, "random_state": 42}
     defaults.update(params)
     return Ridge(**defaults)
-
-
-def ridge_pipeline(
-    numeric_cols: list[str],
-    categorical_cols: list[str],
-    **ridge_params: Any,
-) -> Pipeline:
-    """Preprocessor + Ridge, as one serialisable pipeline."""
-    return Pipeline(
-        steps=[
-            ("pre", make_linear_preprocessor(numeric_cols, categorical_cols)),
-            ("ridge", ridge_regressor(**ridge_params)),
-        ]
-    )
 
 
 # Default l1_ratio grid: spans ridge-like (0.1) to near-lasso (0.99). ElasticNetCV picks the

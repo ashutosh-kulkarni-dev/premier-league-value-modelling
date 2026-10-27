@@ -3,18 +3,85 @@
     "value": {
       "model": "lgbm",
       "metrics": {
-        "target": "value",
-        "model": "lgbm",
-        "method": "cross",
-        "nominal_coverage": 0.8,
-        "achieved_coverage": 0.8956,
-        "point_r2_log": 0.7794,
-        "point_mae_log": 0.3956,
-        "point_spearman": 0.8735,
-        "median_ape_pct": 27.518,
-        "mean_ape_pct": 49.275,
-        "n_test": 1015,
-        "note": "Season split: train 2023-24+2024-25, test 2025-26. CV+ conformal 80% intervals. No season-inflation leakage; features per config/features.yaml."
+        "point_r2_log": 0.7836,
+        "point_mae_log": 0.3916,
+        "point_spearman": 0.8738,
+        "median_ape_pct": 27.8,
+        "n_test": 1015
+      },
+      "confidence": {
+        "tier_bounds": [
+          5000000.0,
+          15000000.0,
+          40000000.0
+        ],
+        "tier_labels": [
+          "<5M",
+          "5-15M",
+          "15-40M",
+          "40M+"
+        ],
+        "area_of_position": {
+          "GK": "GK",
+          "CB": "DEF",
+          "FB": "DEF",
+          "DM": "MID",
+          "CM": "MID",
+          "AM": "MID",
+          "W": "ATT",
+          "ST": "ATT"
+        },
+        "area_thresholds": {
+          "GK": [
+            30.0,
+            36.0
+          ],
+          "DEF": [
+            25.0,
+            40.0
+          ],
+          "MID": [
+            25.0,
+            40.0
+          ],
+          "ATT": [
+            30.0,
+            45.0
+          ]
+        },
+        "lookup": {
+          "GK": {
+            "<5M": 39.70124655242011,
+            "5-15M": 39.133603254634664,
+            "15-40M": 25.248264015508013,
+            "40M+": 27.007586106731914
+          },
+          "DEF": {
+            "<5M": 49.0412777941702,
+            "5-15M": 29.91686414743554,
+            "15-40M": 21.83159412625116,
+            "40M+": 23.40300751924607
+          },
+          "MID": {
+            "<5M": 107.41951286699445,
+            "5-15M": 20.060264297529727,
+            "15-40M": 19.733498249051426,
+            "40M+": 29.812797939006778
+          },
+          "ATT": {
+            "<5M": 54.93807437424185,
+            "5-15M": 38.83610334219172,
+            "15-40M": 27.001262267594615,
+            "40M+": 31.934485253197202
+          }
+        },
+        "tier_fallback": {
+          "<5M": 58.84299422366309,
+          "5-15M": 30.975764020786567,
+          "15-40M": 22.168774878622767,
+          "40M+": 27.007586106731914
+        },
+        "n_scored": 1015
       },
       "shap_global_top15": [
         {
@@ -138,18 +205,85 @@
     "wage": {
       "model": "lgbm",
       "metrics": {
-        "target": "wage",
-        "model": "lgbm",
-        "method": "cross",
-        "nominal_coverage": 0.8,
-        "achieved_coverage": 0.88,
-        "point_r2_log": 0.839,
-        "point_mae_log": 0.2757,
-        "point_spearman": 0.9285,
-        "median_ape_pct": 14.943,
-        "mean_ape_pct": 51.091,
-        "n_test": 1008,
-        "note": "Season split: train 2023-24+2024-25, test 2025-26. CV+ conformal 80% intervals. No season-inflation leakage; features per config/features.yaml."
+        "point_r2_log": 0.8392,
+        "point_mae_log": 0.2642,
+        "point_spearman": 0.9338,
+        "median_ape_pct": 13.5,
+        "n_test": 1008
+      },
+      "confidence": {
+        "tier_bounds": [
+          20000.0,
+          50000.0,
+          100000.0
+        ],
+        "tier_labels": [
+          "<20k",
+          "20-50k",
+          "50-100k",
+          "100k+"
+        ],
+        "area_of_position": {
+          "GK": "GK",
+          "CB": "DEF",
+          "FB": "DEF",
+          "DM": "MID",
+          "CM": "MID",
+          "AM": "MID",
+          "W": "ATT",
+          "ST": "ATT"
+        },
+        "area_thresholds": {
+          "GK": [
+            16.0,
+            30.0
+          ],
+          "DEF": [
+            15.0,
+            30.0
+          ],
+          "MID": [
+            15.0,
+            30.0
+          ],
+          "ATT": [
+            18.0,
+            35.0
+          ]
+        },
+        "lookup": {
+          "GK": {
+            "<20k": 81.60817138542039,
+            "20-50k": 20.54739697327065,
+            "50-100k": 14.121510196434329,
+            "100k+": 7.404093409318463
+          },
+          "DEF": {
+            "<20k": 57.333586120929745,
+            "20-50k": 21.869172541553095,
+            "50-100k": 11.653206301957237,
+            "100k+": 6.4170037478133475
+          },
+          "MID": {
+            "<20k": 239.11629097175182,
+            "20-50k": 33.31662707185189,
+            "50-100k": 8.513418740582166,
+            "100k+": 7.357697824155365
+          },
+          "ATT": {
+            "<20k": 53.285046338443664,
+            "20-50k": 31.702038687002876,
+            "50-100k": 11.382492317514998,
+            "100k+": 13.582980856371037
+          }
+        },
+        "tier_fallback": {
+          "<20k": 81.60817138542039,
+          "20-50k": 31.66013869485044,
+          "50-100k": 11.341029099567791,
+          "100k+": 7.987640561516187
+        },
+        "n_scored": 964
       },
       "shap_global_top15": [
         {

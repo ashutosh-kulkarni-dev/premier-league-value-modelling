@@ -18,7 +18,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from value_wage.calibration import calibrate
 from value_wage.config import (
     ALL_BASELINES,
     ALL_BOOSTERS,
@@ -32,7 +31,6 @@ from value_wage.data import copy_from_scout_pipeline, load_master, load_master_w
 from value_wage.evaluate import (
     bootstrap_metric_ci,
     compute_metrics,
-    interval_coverage,
     plot_pred_vs_actual,
     plot_residuals,
     summarise_predictions,
@@ -66,7 +64,6 @@ eval_app = typer.Typer(help="Evaluation.")
 explain_app = typer.Typer(help="SHAP explanations.")
 misp_app = typer.Typer(help="Mispricing board.")
 
-calib_app = typer.Typer(help="Conformal interval calibration.")
 export_app = typer.Typer(help="Export results for a static HTML UI.")
 compare_app = typer.Typer(help="Baseline vs production model comparison.")
 
@@ -77,7 +74,6 @@ app.add_typer(tune_app, name="tune")
 app.add_typer(eval_app, name="evaluate")
 app.add_typer(explain_app, name="explain")
 app.add_typer(misp_app, name="mispricing")
-app.add_typer(calib_app, name="calibrate")
 app.add_typer(export_app, name="export")
 app.add_typer(compare_app, name="compare")
 
@@ -336,9 +332,6 @@ def evaluate_run(
         "spearman": round(metrics.spearman, 4),
         "median_abs_pct_error": round(metrics.median_abs_pct_error, 4),
     }
-    if "lower" in preds and "upper" in preds:
-        cov = interval_coverage(y_true_log, preds["lower"], preds["upper"])
-        row["interval_coverage_80"] = round(cov, 4)
 
     out_json = settings.paths.reports_dir / f"metrics_{target}_{artifact.model_name}.json"
     out_json.write_text(json.dumps(row, indent=2), encoding="utf-8")
@@ -360,13 +353,8 @@ def evaluate_run(
         out_path=settings.paths.figures_dir / f"resid_vs_age_{target}_{artifact.model_name}.png",
     )
 
-    # Persist the per-row predictions for downstream stages.
+    # Persist the per-row predictions for downstream stages (no intervals).
     preds_df = summarise_predictions(split.test, y_true_log, preds["pred"], target_col=target_col)
-    if "lower" in preds and "upper" in preds:
-        preds_df["lower_log"] = preds["lower"]
-        preds_df["upper_log"] = preds["upper"]
-        preds_df["lower"] = np.expm1(preds["lower"])
-        preds_df["upper"] = np.expm1(preds["upper"])
     preds_df.to_parquet(
         settings.paths.processed_dir / f"predictions_{target}_{artifact.model_name}.parquet",
         index=False,
@@ -437,114 +425,12 @@ def mispricing_build(
             f"Expected {pred_file}. Run `vw evaluate run --target {target}` first."
         )
     preds = pd.read_parquet(pred_file)
-    lower = preds["lower_log"].to_numpy(dtype=float) if "lower_log" in preds.columns else None
-    upper = preds["upper_log"].to_numpy(dtype=float) if "upper_log" in preds.columns else None
-    board = build_board(preds, lower_log=lower, upper_log=upper, top_n=top_n)
+    # Intervals were dropped; the board uses a global residual sigma (ranking is unchanged
+    # from the old near-constant-width intervals).
+    board = build_board(preds, top_n=top_n)
     out_dir = settings.paths.reports_dir / f"mispricing_{target}_{artifact.model_name}"
     board.write(out_dir)
     console.print(f"[green]OK[/green] mispricing board -> {out_dir}")
-
-
-# ---------------- calibrate ----------------
-
-@calib_app.command("run")
-@_guard
-def calibrate_run(
-    target: Target = typer.Option("value"),
-    model: Model = typer.Option("lgbm"),
-    confidence: float = typer.Option(0.8, help="Nominal coverage (e.g. 0.8 for 80% intervals)."),
-    conformity: str = typer.Option(
-        "absolute",
-        help="MAPIE conformity score: 'absolute' (constant-width) or 'gamma' (log-scale, "
-        "multiplicative error).",
-    ),
-    method: str = typer.Option(
-        "split",
-        help="'split' (train-only point model + val calibration — honest independence, less data) "
-        "or 'cross' (CV+ on train+val via GroupKFold — more data, tighter intervals).",
-    ),
-) -> None:
-    """Fit MAPIE split-conformal intervals and report achieved vs nominal coverage on test.
-
-    Overwrites `predictions_{target}_{model}.parquet` with calibrated lower/upper columns and
-    writes `metrics_calibrated_{target}_{model}.json`.
-    """
-    settings = get_settings()
-    params_path = settings.paths.models_dir / f"{target}__{model}__best_params" / "params.json"
-    if not params_path.exists():
-        raise FileNotFoundError(
-            f"Tuned params not found at {params_path}. Run `vw tune one --target {target} "
-            f"--model {model}` first."
-        )
-    params = json.loads(params_path.read_text(encoding="utf-8"))
-    features = _load_features_or_build()
-    predictor = calibrate(
-        model, target, features, params,
-        confidence_level=confidence, conformity_score=conformity,
-        method=method, settings=settings,
-    )
-
-    split = make_splits(features, target, cfg=settings.split)
-    target_col = TARGET_COLUMN[target]
-    preds = predictor.predict(split.test)
-    y_true = np.log1p(split.test[target_col].to_numpy(dtype=float))
-
-    inside = (y_true >= preds["lower"]) & (y_true <= preds["upper"])
-    coverage = float(inside.mean())
-    width_log = float(np.mean(preds["upper"] - preds["lower"]))
-    median_width_log = float(np.median(preds["upper"] - preds["lower"]))
-
-    from value_wage.evaluate import compute_metrics
-    m = compute_metrics(y_true, preds["pred"])
-
-    if method == "cross":
-        note = (
-            "Cross-conformal (CV+) with GroupKFold on player_id over train+val. "
-            "Point predictions ensemble K out-of-fold models; intervals satisfy the coverage "
-            "guarantee without sacrificing training data."
-        )
-    else:
-        note = (
-            "Split-conformal: point model trained on TRAIN SEASON ONLY (not train+val) so val "
-            "could be held out for calibration. Metrics therefore differ slightly from "
-            "`evaluate run`."
-        )
-    out = {
-        "target": target,
-        "model": model,
-        "method": method,
-        "conformity_score": conformity,
-        "nominal_coverage": confidence,
-        "achieved_coverage": round(coverage, 4),
-        "mean_interval_width_log": round(width_log, 4),
-        "median_interval_width_log": round(median_width_log, 4),
-        "point_mae_log": round(m.mae_log, 4),
-        "point_r2_log": round(m.r2_log, 4),
-        "point_spearman": round(m.spearman, 4),
-        "n_test": m.n,
-        "note": note,
-    }
-    out_path = settings.paths.reports_dir / f"metrics_calibrated_{target}_{model}.json"
-    out_path.write_text(json.dumps(out, indent=2), encoding="utf-8")
-    console.print_json(data=out)
-
-    # Overwrite the predictions parquet with the calibrated intervals so mispricing re-uses them.
-    pred_df = split.test.loc[:, ["player", "player_id", "season", "club", target_col]].copy()
-    pred_df["actual_log"] = y_true
-    pred_df["pred_log"] = preds["pred"]
-    pred_df["actual"] = np.expm1(y_true)
-    pred_df["pred"] = np.expm1(preds["pred"])
-    pred_df["lower_log"] = preds["lower"]
-    pred_df["upper_log"] = preds["upper"]
-    pred_df["lower"] = np.expm1(preds["lower"])
-    pred_df["upper"] = np.expm1(preds["upper"])
-    pred_df["residual_log"] = preds["pred"] - y_true
-    pred_df["residual_pct"] = (pred_df["pred"] - pred_df["actual"]) / pred_df["actual"].replace(0, np.nan)
-    pred_df.to_parquet(
-        settings.paths.processed_dir / f"predictions_calibrated_{target}_{model}.parquet",
-        index=False,
-    )
-    console.print("[green]OK[/green] calibrated predictions saved")
 
 
 # ---------------- export ----------------
@@ -558,7 +444,7 @@ def export_web(model_name: str = typer.Option("lgbm", help="Which tuned model to
     console.print(f"[green]OK[/green] players    -> {bundle.players_path}")
     console.print(f"[green]OK[/green] meta       -> {bundle.meta_path}")
     console.print(f"[green]OK[/green] mispricing -> {bundle.mispricing_path}")
-    console.print(f"[green]OK[/green] bio        -> {bundle.bio_path}")
+    console.print(f"[green]OK[/green] detail     -> {bundle.detail_dir} ({bundle.n_detail} players)")
 
 
 # ---------------- compare ----------------
@@ -608,13 +494,19 @@ def compare_run(
         art = train_baseline(mdl, target, features, settings=settings)
         rows.append(_row(mdl, predict(art, split.test)["pred"]))
 
-    # 3) Production model, if present.
-    lgbm_dir = settings.paths.models_dir / f"{target}__lgbm__tuned"
-    if lgbm_dir.exists():
-        art = TrainedArtifact.from_dir(lgbm_dir)
-        rows.append(_row("lgbm (production)", predict(art, split.test)["pred"]))
-    else:
-        console.print("[yellow]No tuned LightGBM found; comparing baselines only.[/yellow]")
+    # 3) Tuned boosters, if present on disk. lgbm is the production model; the rest
+    #    (xgb, catboost, hgbr) are included whenever their tuned artifact exists.
+    found_booster = False
+    for mdl in ALL_BOOSTERS:
+        booster_dir = settings.paths.models_dir / f"{target}__{mdl}__tuned"
+        if not booster_dir.exists():
+            continue
+        found_booster = True
+        art = TrainedArtifact.from_dir(booster_dir)
+        label = f"{mdl} (production)" if mdl == "lgbm" else mdl
+        rows.append(_row(label, predict(art, split.test)["pred"]))
+    if not found_booster:
+        console.print("[yellow]No tuned boosters found; comparing baselines only.[/yellow]")
 
     df = pd.DataFrame(rows).sort_values("r2_log", ascending=False).reset_index(drop=True)
     settings.paths.reports_dir.mkdir(parents=True, exist_ok=True)

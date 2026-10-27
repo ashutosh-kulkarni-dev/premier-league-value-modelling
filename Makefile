@@ -1,7 +1,7 @@
 PY := .venv/Scripts/python.exe
 VW := $(PY) -m value_wage.cli
 
-.PHONY: help install data features train baselines tune evaluate compare explain mispricing calibrate export serve test lint type clean all
+.PHONY: help install data features train baselines tune evaluate compare target-compare explain mispricing export serve test lint type clean all
 
 help:
 	@echo "Targets:"
@@ -14,7 +14,7 @@ help:
 	@echo "  baselines   Fit ElasticNet + Random Forest reference models (both targets)"
 	@echo "  evaluate    Evaluate the selected winning models on the test split"
 	@echo "  compare     Baseline vs production comparison table (both targets)"
-	@echo "  calibrate   Fit MAPIE conformal intervals (--method cross)"
+	@echo "  target-compare TARGET=value MODEL=lgbm   log1p vs direct target experiment"
 	@echo "  explain     Produce SHAP global + local plots"
 	@echo "  mispricing  Produce the mispricing board CSVs"
 	@echo "  export      Produce the JSON bundle for the web UI"
@@ -57,6 +57,11 @@ compare:
 	$(VW) compare run --target value
 	$(VW) compare run --target wage
 
+TARGET ?= value
+MODEL ?= lgbm
+target-compare:
+	$(PY) experiments/target_transform_compare.py --target $(TARGET) --model $(MODEL)
+
 explain:
 	$(VW) explain run --target value
 	$(VW) explain run --target wage
@@ -64,10 +69,6 @@ explain:
 mispricing:
 	$(VW) mispricing build --target value
 	$(VW) mispricing build --target wage
-
-calibrate:
-	$(VW) calibrate run --target value --model lgbm --method cross
-	$(VW) calibrate run --target wage  --model lgbm --method cross
 
 export:
 	$(VW) export web

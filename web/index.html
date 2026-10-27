@@ -13,7 +13,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 <style>
   :root{
-    --bg:#f7f8fa; --panel:#fff; --text:#151922; --muted:#7a808c;
+    --bg:#f7f8fa; --panel:#fff; --text:#151922; --text-2:#4c535e; --muted:#7a808c; --faint:#9aa0ab;
     --line:#e7e9ed; --line-soft:#eceef1;
     --green:#16c767; --green2:#2fd276; --pink:#f24b74; --yellow:#d9ed36; --dark:#171a20;
     --amber:#e9a21b; --red:#c73b3b;
@@ -32,19 +32,20 @@
   .brand-mark{width:38px;height:38px;object-fit:contain;display:block}
   .brand .brand-name{letter-spacing:-0.01em}
   .nav{display:flex;align-items:stretch;height:100%;gap:25px}
-  .nav button{position:relative;color:#747987;padding:0 2px;font-weight:500}
-  .nav button.active{color:#151922;font-weight:600}
+  .nav button{position:relative;color:var(--muted);padding:0 2px;font-weight:500}
+  .nav button.active{color:var(--text);font-weight:600}
   .nav button.active:after{content:"";position:absolute;bottom:0;left:0;right:0;height:2px;background:#151922}
   .top-actions{margin-left:auto;display:flex;align-items:center;gap:10px}
   .top-actions .search{width:220px}
   .avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(145deg,#f1c9a4,#c4774e);border:2px solid #fff;box-shadow:0 0 0 1px #e0e2e7;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700}
 
   /* ==== Subbar ==== */
-  .subbar{height:42px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;color:#747987;gap:16px}
+  .subbar{height:42px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;color:var(--muted);gap:16px}
   .sub-left{display:flex;align-items:center;gap:12px}
   .sub-divider{height:16px;width:1px;background:#e5e7eb}
   .sub-right{margin-left:auto;display:flex;gap:14px;align-items:center}
-  .model-tag{display:inline-flex;gap:7px;align-items:center;padding:3px 8px;border-radius:5px;background:#f1f3f6;color:#4c535e;font-size:11px}
+  .model-tag{display:inline-flex;gap:7px;align-items:center;padding:3px 8px;border-radius:5px;background:#f1f3f6;color:var(--text-2);font-size:11px}
+  .season-tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:5px;background:#f1f3f6;color:var(--text-2);font-size:11px;font-weight:600}
 
   /* ==== Main grid ==== */
   main{padding:16px 16px 24px}
@@ -59,17 +60,17 @@
   .panel-pad{padding:18px}
   .panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
   .panel-title{font-size:15px;font-weight:700}
-  .more{font-size:19px;line-height:1;color:#757b86;padding:0 3px}
+  .more{font-size:19px;line-height:1;color:var(--muted);padding:0 3px}
 
   /* ==== Metric row ==== */
   .metrics{display:grid;grid-template-columns:repeat(3,1fr)}
   .metric{padding-right:22px;min-height:90px}
   .metric+.metric{padding-left:24px;border-left:1px solid var(--line)}
-  .metric-label{font-size:10px;color:#858b96;text-transform:uppercase;letter-spacing:.035em;margin-bottom:7px}
+  .metric-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.035em;margin-bottom:7px}
   .metric-value{font-size:19px;font-weight:600;letter-spacing:-.02em}
   .metric-note{color:#1ac467;font-size:11px;margin-left:5px}
   .metric-note.red{color:#d33d3d}
-  .metric-sub{font-size:11px;color:#8b919c;margin-top:5px}
+  .metric-sub{font-size:11px;color:var(--muted);margin-top:5px}
   .pct-bars{height:7px;border-radius:4px;background:#edf0f3;display:flex;overflow:hidden;margin-top:14px}
   .pct-bars span{display:block;height:100%}
 
@@ -77,44 +78,44 @@
   .chart-panel{min-height:360px}
   .chart-wrap{height:270px;position:relative;margin-top:4px}
   .legend{display:flex;gap:21px;align-items:center;margin-top:8px}
-  .legend-item{display:flex;align-items:center;gap:7px;color:#5e6570;font-size:11px}
+  .legend-item{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:11px}
   .check{width:16px;height:16px;border-radius:4px;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700}
   .ck-green{background:var(--green)} .ck-pink{background:var(--pink)} .ck-dark{background:var(--dark)}
   .ck-amber{background:var(--amber)}
 
   /* ==== Chip + filters ==== */
   .chip-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-  .chip{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:11px;cursor:pointer;user-select:none;color:#484e58}
+  .chip{display:inline-flex;align-items:center;padding:4px 10px;border-radius:999px;background:#fff;border:1px solid var(--line);font-size:11px;cursor:pointer;user-select:none;color:var(--text-2)}
   .chip:hover{background:#fafbfc}
   .chip.active{background:#151b2b;color:#fff;border-color:#151b2b}
-  .group-label{font-size:11px;color:#8b919b;margin-right:4px}
+  .group-label{font-size:11px;color:var(--muted);margin-right:4px}
 
   /* ==== Filter card ==== */
   .filter-card{background:#fff;border:1px solid var(--line);border-radius:9px;padding:14px 16px;margin-bottom:14px}
   .filter-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 14px}
   .filter-field{display:flex;flex-direction:column;gap:5px;min-width:0}
-  .filter-field label{font-size:10px;font-weight:600;color:#4c535e;text-transform:uppercase;letter-spacing:.04em}
+  .filter-field label{font-size:10px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.04em}
   .filter-field input,.filter-field select,.filter-field .ms-btn{height:34px;border:1px solid var(--line);border-radius:7px;background:#fff;padding:0 10px;font-size:12px;color:var(--text);width:100%}
-  .filter-field input::placeholder{color:#9aa0ab}
+  .filter-field input::placeholder{color:var(--faint)}
   .filter-field input:focus,.filter-field select:focus,.filter-field .ms-btn:focus{outline:none;border-color:#4c84e8;box-shadow:0 0 0 2px rgba(76,132,232,.12)}
   .filter-actions{grid-column:4 / 5;display:flex;align-items:flex-end;justify-content:flex-end;gap:12px}
   .btn-primary{height:34px;padding:0 18px;border-radius:7px;background:#2563eb;color:#fff;font-weight:600;font-size:12px;border:0;cursor:pointer}
   .btn-primary:hover{background:#1e51c7}
   .link-btn{background:none;border:0;color:#2563eb;font-weight:500;font-size:12px;cursor:pointer;padding:0}
   .link-btn:hover{text-decoration:underline}
-  .pl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:#4c535e;cursor:pointer;user-select:none;margin-right:8px}
+  .pl-toggle{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);cursor:pointer;user-select:none;margin-right:8px}
   .pl-toggle input{width:14px;height:14px;margin:0;accent-color:#2563eb}
 
   /* multi-select dropdown */
   .ms{position:relative;width:100%}
   .ms-btn{display:flex;align-items:center;justify-content:space-between;cursor:pointer;text-align:left;color:var(--text);gap:6px}
-  .ms-btn .ms-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#424851}
-  .ms-btn .ms-label.placeholder{color:#9aa0ab}
-  .ms-btn .ms-caret{color:#8b919b;flex:0 0 auto;transition:transform .15s}
+  .ms-btn .ms-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2)}
+  .ms-btn .ms-label.placeholder{color:var(--faint)}
+  .ms-btn .ms-caret{color:var(--muted);flex:0 0 auto;transition:transform .15s}
   .ms.open .ms-btn .ms-caret{transform:rotate(180deg)}
   .ms-panel{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--line);border-radius:7px;box-shadow:0 10px 24px rgba(15,23,42,.1);z-index:20;max-height:260px;overflow:auto;padding:4px 0;display:none}
   .ms.open .ms-panel{display:block}
-  .ms-option{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;color:#424851;cursor:pointer;user-select:none}
+  .ms-option{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:12px;color:var(--text-2);cursor:pointer;user-select:none}
   .ms-option:hover{background:#f3f5f8}
   .ms-option input{width:14px;height:14px;margin:0;accent-color:#2563eb}
 
@@ -125,8 +126,8 @@
   .search-row{display:flex;align-items:center;gap:12px;margin:0 18px 10px}
   .search-row .search-input{flex:0 0 240px;height:30px;border:1px solid var(--line);border-radius:7px;background:#fff;padding:0 10px}
   table{width:100%;border-collapse:collapse}
-  table th{font-size:10px;text-align:left;color:#4c535e;font-weight:600;padding:11px 14px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.03em}
-  table td{padding:9px 14px;border-bottom:1px solid var(--line-soft);color:#424851}
+  table th{font-size:10px;text-align:left;color:var(--text-2);font-weight:600;padding:11px 14px;border-bottom:1px solid var(--line);text-transform:uppercase;letter-spacing:.03em}
+  table td{padding:9px 14px;border-bottom:1px solid var(--line-soft);color:var(--text-2)}
   table tr:last-child td{border-bottom:0}
   .table-wrap{overflow:auto}
   .num{text-align:right;font-variant-numeric:tabular-nums}
@@ -135,7 +136,7 @@
   tr.clickable:hover{background:#f3f5f8}
   .photo-cell{display:flex;align-items:center;gap:9px}
   .photo-cell img{width:28px;height:28px;border-radius:50%;object-fit:cover;background:#eceef1;border:1px solid var(--line)}
-  .rank{color:#8b919b;width:28px;display:inline-block}
+  .rank{color:var(--muted);width:28px;display:inline-block}
 
   /* ==== Verdict chips ==== */
   .vchip{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:500;text-transform:capitalize;display:inline-block}
@@ -149,13 +150,13 @@
   .player-header{display:grid;grid-template-columns:140px 1fr auto;gap:22px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:20px 22px;box-shadow:var(--shadow)}
   .player-header img{width:140px;height:140px;border-radius:10px;object-fit:cover;background:#eceef1;border:1px solid var(--line)}
   .player-header h1{font-size:28px;margin:0;letter-spacing:-0.02em;font-weight:700}
-  .player-header .subtitle{color:#6b7280;font-size:13px;margin-top:4px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  .player-header .pill{background:#f3f5f8;padding:3px 9px;border-radius:999px;font-size:11px;color:#4c535e}
+  .player-header .subtitle{color:var(--muted);font-size:13px;margin-top:4px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .player-header .pill{background:#f3f5f8;padding:3px 9px;border-radius:999px;font-size:11px;color:var(--text-2)}
   .verdict-stack{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
 
   /* ==== SHAP list ==== */
   .shap-item{display:grid;grid-template-columns:140px 60px 1fr;gap:10px;align-items:center;padding:6px 0;font-size:12px}
-  .shap-item .f{color:#4c535e}
+  .shap-item .f{color:var(--text-2)}
   .shap-item .v{font-variant-numeric:tabular-nums;font-weight:500;text-align:right}
   .shap-item .v.pos{color:#166534}
   .shap-item .v.neg{color:#991b1b}
@@ -166,14 +167,14 @@
   .shap-item .bar>span.neg{right:50%;background:#f24b74}
 
   /* ==== Insights-view tables ==== */
-  .pill-chip{display:inline-block;padding:3px 8px;border-radius:999px;background:#f1f3f6;color:#4c535e;font-size:11px}
+  .pill-chip{display:inline-block;padding:3px 8px;border-radius:999px;background:#f1f3f6;color:var(--text-2);font-size:11px}
 
   /* ==== How we validate cards ==== */
   .validate-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:2px}
   .validate-card{background:#fafbfc;border:1px solid var(--line);border-radius:8px;padding:14px 16px}
-  .validate-title{font-size:12px;font-weight:600;color:#151922;margin-bottom:6px;letter-spacing:-.01em}
-  .validate-body{font-size:11.5px;line-height:1.55;color:#4c535e}
-  .validate-body code{background:#eef0f3;color:#2b3240;padding:1px 5px;border-radius:4px;font-size:11px}
+  .validate-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:6px;letter-spacing:-.01em}
+  .validate-body{font-size:11.5px;line-height:1.55;color:var(--text-2)}
+  .validate-body code{background:#eef0f3;color:var(--text-2);padding:1px 5px;border-radius:4px;font-size:11px}
   @media(max-width:900px){ .validate-grid{grid-template-columns:1fr} }
 
   @media(max-width:1100px){
@@ -193,9 +194,176 @@
     .metric{padding-right:0}
     .top-actions .search{width:150px}
   }
+
+  /* ==== New: nav toggle (hidden; mobile uses the scroll nav) ==== */
+  .nav-toggle{display:none}
+
+  /* ==== New: clickable rows ==== */
+  table tbody tr[data-pid]{cursor:pointer}
+  table tbody tr[data-pid]:hover{background:#f7f8fb}
+
+  /* ==== New: players index ==== */
+  .index-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .index-search{flex:1;min-width:200px}
+  .pl-cell{display:flex;align-items:center;gap:10px}
+  .pl-cell img{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#eef0f3;flex:none}
+  .pl-cell span{font-weight:600;color:var(--text)}
+  .conf-dot{font-size:13px}
+
+  /* ==== New: compare ==== */
+  .compare-pickers{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .compare-pickers .index-search{flex:1}
+  .cmp-vs{color:var(--muted);font-weight:600}
+  .cmp-table{width:100%;border-collapse:collapse}
+  .cmp-table th{padding:10px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:bottom}
+  .cmp-table td{padding:10px 14px;border-bottom:1px solid var(--line-soft);font-size:13px}
+  .cmp-metric{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.03em;width:160px}
+  .cmp-head{display:flex;align-items:center;gap:10px}
+  .cmp-head img{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#eef0f3}
+  .cmp-head a{font-weight:700;font-size:15px;color:var(--pl-purple);text-decoration:none}
+  .cmp-head a:hover{text-decoration:underline}
+  .cmp-sub{font-size:11px;color:var(--muted);margin-top:2px}
+
+  /* ==== New: about ==== */
+  .about-hero{margin-bottom:12px}
+  .about-hero h1{margin:0 0 8px;font-size:26px;letter-spacing:-.02em}
+  .about-hero p{margin:0;color:var(--text-2);font-size:14px;max-width:760px;line-height:1.55}
+  .about-p{color:var(--text-2);font-size:13px;line-height:1.6;margin:0 0 10px}
+  .about-p code{background:#f1f3f6;padding:1px 5px;border-radius:4px;font-size:12px}
+  .empty{color:var(--muted);padding:40px;text-align:center}
+  .back-link{display:inline-block;margin-bottom:12px;color:var(--pl-purple);text-decoration:none;font-weight:600;font-size:12px}
+  .back-link:hover{text-decoration:underline}
+  .pill-link{text-decoration:none;cursor:pointer}
+  .pill-link:hover{background:#eceef1}
+  .data-note{margin-top:12px;padding:10px 14px;border:1px dashed var(--line);border-radius:8px;background:#fafbfc;color:var(--muted);font-size:11px}
+
+  /* ==== Leaders ==== */
+  .lead-table{width:100%;border-collapse:collapse}
+  .lead-table td{padding:7px 8px;border-bottom:1px solid var(--line-soft);font-size:12px}
+  .lead-rank{color:var(--faint);font-weight:700;width:22px;text-align:center}
+  .lead-club{color:var(--muted);font-size:11px}
+  .lead-val{font-weight:700}
+
+  /* ==== Teams ==== */
+  .team-head{display:flex;align-items:baseline;gap:24px;flex-wrap:wrap}
+  .team-head h1{margin:0;font-size:24px;letter-spacing:-.02em}
+  .team-stats{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+  .team-stats > div{display:flex;flex-direction:column;gap:3px}
+  .team-stat{font-size:18px;font-weight:700}
+
+  @media(max-width:560px){
+    .compare-pickers{flex-direction:column;align-items:stretch}
+    .cmp-metric{width:auto}
+  }
+
+  /* ==== Theme toggle ==== */
+  .theme-toggle{width:34px;height:34px;border:1px solid var(--line);border-radius:7px;background:var(--panel);font-size:15px;line-height:1;display:grid;place-items:center;flex:none}
+  .theme-toggle:hover{background:var(--bg)}
+
+  /* ==== Loading overlay + spinner ==== */
+  .app-loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:1000;transition:opacity .25s}
+  .app-loading.done{opacity:0;pointer-events:none}
+  .app-loading-text{color:var(--muted);font-size:12px}
+  .spinner{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--pl-purple);border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .skeleton{background:linear-gradient(90deg,var(--line-soft) 25%,var(--line) 37%,var(--line-soft) 63%);background-size:400% 100%;animation:sk 1.3s ease infinite;border-radius:6px}
+  @keyframes sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+  /* ==== Live search dropdown ==== */
+  .search-wrap{position:relative}
+  .search-dd{position:absolute;top:calc(100% + 5px);right:0;width:320px;max-height:380px;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:0 12px 30px rgba(15,23,42,.14);z-index:40;padding:5px}
+  .sd-item{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:7px;cursor:pointer}
+  .sd-item:hover,.sd-item.active{background:var(--bg)}
+  .sd-item img{width:30px;height:30px;border-radius:50%;object-fit:cover;background:var(--line-soft);flex:none}
+  .sd-name{font-weight:600;font-size:12px;color:var(--text)}
+  .sd-sub{font-size:11px;color:var(--muted)}
+  .sd-val{margin-left:auto;font-size:11px;font-weight:700;color:var(--text);white-space:nowrap}
+  .sd-empty{padding:14px;text-align:center;color:var(--muted);font-size:12px}
+
+  /* ==== Richer profile hero ==== */
+  .hero-stats{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+  .hero-stat{background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:10px 14px;min-width:120px;flex:1}
+  .hero-stat .metric-label{margin-bottom:5px}
+  .hero-stat .hs-val{font-size:20px;font-weight:700;letter-spacing:-.02em}
+  .hero-stat .hs-sub{font-size:11px;margin-top:3px}
+
+  /* ==== Dashboard confidence split ==== */
+  .conf-split{display:flex;height:9px;border-radius:5px;overflow:hidden;margin-top:12px;background:var(--line-soft)}
+  .conf-split span{display:block;height:100%}
+  .conf-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:10px}
+  .conf-legend .ci{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+  .conf-legend .dot{width:9px;height:9px;border-radius:3px}
+
+  /* ==== Dark theme ==== */
+  :root[data-theme="dark"]{
+    --bg:#0f1319; --panel:#171d26; --text:#f4f6fa; --text-2:#e2e7ee; --muted:#cbd2dd; --faint:#b2bac6;
+    --line:#2a313c; --line-soft:#20262f;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.4);
+  }
+  :root[data-theme="dark"] .topbar,
+  :root[data-theme="dark"] .subbar{background:var(--panel);border-color:var(--line)}
+  :root[data-theme="dark"] select,
+  :root[data-theme="dark"] input,
+  :root[data-theme="dark"] .chip,
+  :root[data-theme="dark"] .filter-card,
+  :root[data-theme="dark"] .filter-field input,
+  :root[data-theme="dark"] .filter-field select,
+  :root[data-theme="dark"] .filter-field .ms-btn,
+  :root[data-theme="dark"] .ms-panel,
+  :root[data-theme="dark"] .search-row .search-input{background:#0e141c;color:var(--text);border-color:var(--line)}
+  :root[data-theme="dark"] .nav button{color:#cbd2dd}
+  :root[data-theme="dark"] .nav button.active{color:var(--text)}
+  :root[data-theme="dark"] .nav button.active:after{background:var(--text)}
+  :root[data-theme="dark"] table th{color:var(--muted);border-color:var(--line)}
+  :root[data-theme="dark"] table td{color:#e2e7ee;border-color:var(--line-soft)}
+  :root[data-theme="dark"] tr.clickable:hover,
+  :root[data-theme="dark"] table tbody tr[data-pid]:hover,
+  :root[data-theme="dark"] table tbody tr[data-club]:hover,
+  :root[data-theme="dark"] .ms-option:hover{background:#1f2630}
+  :root[data-theme="dark"] .chip:hover{background:#1f2630}
+  :root[data-theme="dark"] .chip.active{background:#e7eaef;color:#0f1319;border-color:#e7eaef}
+  :root[data-theme="dark"] .validate-card,
+  :root[data-theme="dark"] .hero-stat{background:#121820}
+  :root[data-theme="dark"] .player-header .pill,
+  :root[data-theme="dark"] .pill-chip,
+  :root[data-theme="dark"] .model-tag,
+  :root[data-theme="dark"] .season-tag,
+  :root[data-theme="dark"] .data-note,
+  :root[data-theme="dark"] .about-p code,
+  :root[data-theme="dark"] .validate-body code{background:#1f2630;color:#e2e7ee}
+  :root[data-theme="dark"] .pill-link:hover{background:#2a323d}
+  :root[data-theme="dark"] .shap-item .bar,
+  :root[data-theme="dark"] .pct-bars,
+  :root[data-theme="dark"] .conf-split{background:#1f2630}
+  :root[data-theme="dark"] .shap-item .bar::after{background:#39414d}
+  :root[data-theme="dark"] .pl-cell img,
+  :root[data-theme="dark"] .player-header img,
+  :root[data-theme="dark"] .cmp-head img,
+  :root[data-theme="dark"] .sd-item img,
+  :root[data-theme="dark"] .photo-cell img{background:#1f2630}
+  :root[data-theme="dark"] .v-excellent{background:#123020;color:#4ade80}
+  :root[data-theme="dark"] .v-good{background:#152a4d;color:#93b4ff}
+  :root[data-theme="dark"] .v-fair{background:#372c12;color:#fcd34d}
+  :root[data-theme="dark"] .v-poor{background:#3a1818;color:#fca5a5}
+  :root[data-theme="dark"] .v-unknown{background:#2b323c;color:#d3d9e2}
+  :root[data-theme="dark"] .theme-toggle{background:#1f2630}
+
+  /* ==== Mobile: new pages ==== */
+  @media(max-width:720px){
+    .search-wrap{flex:1}
+    .search{width:100%}
+    .search-dd{width:min(92vw,340px)}
+    .index-controls{flex-direction:column;align-items:stretch}
+    .cmp-table th,.cmp-table td{padding:8px 8px;font-size:12px}
+    .cmp-head{flex-direction:column;align-items:flex-start;gap:6px}
+    .cmp-head img{width:34px;height:34px}
+    .team-stats{gap:14px;margin-left:0;width:100%}
+    .hero-stat{min-width:calc(50% - 6px)}
+  }
 </style>
 </head>
 <body>
+<div id="app-loading" class="app-loading"><div class="spinner"></div><div class="app-loading-text">Loading PL Insight…</div></div>
 
 <header class="topbar">
   <div class="brand">
@@ -205,16 +373,25 @@
   <nav class="nav" id="nav">
     <button data-view="dashboard" class="active">Dashboard</button>
     <button data-view="players">Players</button>
-    <button data-view="underpays">Market underpays</button>
-    <button data-view="overpays">Market overpays</button>
+    <button data-view="underpays">Underpays</button>
+    <button data-view="overpays">Overpays</button>
+    <button data-view="leaders">Leaders</button>
+    <button data-view="teams">Teams</button>
+    <button data-view="compare">Compare</button>
     <button data-view="insights">Insights</button>
+    <button data-view="about">About</button>
   </nav>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu">☰</button>
   <div class="top-actions">
     <select id="target">
       <option value="value">Market value (€)</option>
       <option value="wage">Wage (£/wk)</option>
     </select>
-    <input class="search" id="searchbox" type="search" placeholder="Search player…" autocomplete="off" list="player-list">
+    <div class="search-wrap">
+      <input class="search" id="searchbox" type="search" placeholder="Search player…" autocomplete="off" aria-label="Search player">
+      <div class="search-dd" id="search-dd" hidden></div>
+    </div>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle theme">🌙</button>
   </div>
 </header>
 
@@ -222,11 +399,7 @@
   <div class="sub-left">
     <span>▣</span>
     <span>Season:</span>
-    <select id="season" style="padding:3px 8px;font-size:11px"></select>
-    <select id="snapshot" style="padding:3px 8px;font-size:11px">
-      <option value="end">End of season</option>
-      <option value="start">Start of season</option>
-    </select>
+    <span class="season-tag" id="season-tag">2025-26 · End of season</span>
   </div>
   <div class="sub-right">
     <span>Data: Transfermarkt + Understat + FM26</span>
@@ -254,9 +427,9 @@
           <div class="metric-sub">Lower is better. In log(€).</div>
         </div>
         <div class="metric">
-          <div class="metric-label">80% coverage</div>
+          <div class="metric-label">Typical error</div>
           <div class="metric-value" id="kpi-cov">—</div>
-          <div class="metric-sub">Target 80%. Share of actuals inside the model's interval.</div>
+          <div class="metric-sub">Median |% error| on the 2025-26 holdout. Lower is better.</div>
         </div>
       </div>
     </section>
@@ -277,11 +450,14 @@
       </div>
       <div class="pct-bars" id="verdict-bar"></div>
       <div class="legend" id="verdict-legend"></div>
+      <div class="metric-label" style="margin-top:18px">Model confidence</div>
+      <div class="conf-split" id="conf-split"></div>
+      <div class="conf-legend" id="conf-legend"></div>
     </section>
 
     <section class="panel panel-pad chart-panel">
       <div class="panel-head"><div><div class="panel-title">Prediction accuracy</div></div></div>
-      <div style="font-size:10px;color:#8b919b">Each dot = one scored player (log scale). Dashed line = perfect prediction. Points above = model too low; below = model too high.</div>
+      <div style="font-size:10px;color:var(--muted)">Each dot = one scored player (log scale). Dashed line = perfect prediction. Points above = model too low; below = model too high.</div>
       <div class="chart-wrap"><canvas id="scatter-chart"></canvas></div>
     </section>
 
@@ -308,9 +484,35 @@
 </section>
 
 <!-- ========== PLAYERS ========== -->
+<!-- ========== PLAYERS INDEX ========== -->
 <section id="view-players" class="view">
+  <div class="panel panel-pad">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Players</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Every player in the dataset. Click a row to open the full profile.</div>
+      </div>
+    </div>
+    <div class="index-controls">
+      <input class="index-search" id="players-search" type="search" placeholder="Filter by name or club…" autocomplete="off">
+      <div class="chip-row" id="players-area-chips"></div>
+      <select id="players-sort">
+        <option value="value_desc">Value: high → low</option>
+        <option value="value_asc">Value: low → high</option>
+        <option value="name">Name A–Z</option>
+        <option value="age_asc">Age: young → old</option>
+        <option value="minutes_desc">Minutes played</option>
+      </select>
+    </div>
+    <div style="color:var(--muted);font-size:11px;margin:10px 0" id="players-count"></div>
+    <div class="table-wrap"><table id="players-table"></table></div>
+  </div>
+</section>
+
+<!-- ========== PLAYER PROFILE ========== -->
+<section id="view-player" class="view">
   <div id="player-detail">
-    <p style="color:#8b919b;padding:40px;text-align:center">Pick a player from the search box, dashboard feed, or mispricing views to open their card.</p>
+    <p style="color:var(--muted);padding:40px;text-align:center">Pick a player from the search box, Players tab, dashboard feed, or mispricing views.</p>
   </div>
 </section>
 
@@ -320,11 +522,11 @@
     <div class="panel-head">
       <div>
         <div class="panel-title">Market underpays</div>
-        <div style="font-size:11px;color:#8b919b;margin-top:3px">Players whose actual market value is <strong>below</strong> the model's prediction. Potential bargains, or players the market has written down for an invisible reason (injury, out of favour, contract leverage).</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Players whose actual market value is <strong>below</strong> the model's prediction. Potential bargains, or players the market has written down for an invisible reason (injury, out of favour, contract leverage).</div>
       </div>
       </div>
     <div class="chip-row" id="under-filters" style="margin-bottom:12px"></div>
-    <div style="color:#8b919b;font-size:11px;margin-bottom:12px" id="under-count"></div>
+    <div style="color:var(--muted);font-size:11px;margin-bottom:12px" id="under-count"></div>
     <div class="chart-wrap" style="height:280px;margin-bottom:16px"><canvas id="under-chart"></canvas></div>
     <div class="table-wrap"><table id="under-table"></table></div>
   </div>
@@ -335,11 +537,11 @@
     <div class="panel-head">
       <div>
         <div class="panel-title">Market overpays</div>
-        <div style="font-size:11px;color:#8b919b;margin-top:3px">Players whose actual market value is <strong>above</strong> the model's prediction. Hype premium, "manager wanted them", or youth prospects with speculative valuations.</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Players whose actual market value is <strong>above</strong> the model's prediction. Hype premium, "manager wanted them", or youth prospects with speculative valuations.</div>
       </div>
       </div>
     <div class="chip-row" id="over-filters" style="margin-bottom:12px"></div>
-    <div style="color:#8b919b;font-size:11px;margin-bottom:12px" id="over-count"></div>
+    <div style="color:var(--muted);font-size:11px;margin-bottom:12px" id="over-count"></div>
     <div class="chart-wrap" style="height:280px;margin-bottom:16px"><canvas id="over-chart"></canvas></div>
     <div class="table-wrap"><table id="over-table"></table></div>
   </div>
@@ -362,16 +564,16 @@
           <div class="metric-sub">incl. snapshot-aware age &amp; contract</div>
         </div>
         <div class="metric">
-          <div class="metric-label">Calibration</div>
-          <div class="metric-value">CV+ conformal</div>
-          <div class="metric-sub">GroupKFold on player_id</div>
+          <div class="metric-label">Confidence</div>
+          <div class="metric-value">Cohort error</div>
+          <div class="metric-sub">typical % error by area × value tier</div>
         </div>
       </div>
     </section>
 
     <section class="panel panel-pad">
       <div class="panel-head"><div class="panel-title">What the model learned</div></div>
-      <div style="font-size:11px;color:#656c77;margin-bottom:10px">Longer bar = larger average impact on the model's prediction. Mean |SHAP contribution| across all scored players.</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Longer bar = larger average impact on the model's prediction. Mean |SHAP contribution| across all scored players.</div>
       <div class="chart-wrap" style="height:280px"><canvas id="feat-chart"></canvas></div>
     </section>
 
@@ -385,9 +587,9 @@
           </div>
         </div>
         <div class="validate-card">
-          <div class="validate-title">🎯 Tuning + intervals</div>
+          <div class="validate-title">🎯 Tuning + confidence</div>
           <div class="validate-body">
-            Point model tuned with Optuna (TPE sampler + MedianPruner, 20-30 trials per booster), then wrapped in MAPIE's cross-conformal regressor for distribution-free 80% prediction intervals.
+            Point model tuned with Optuna (TPE sampler + MedianPruner, 20-30 trials per booster). Per-player confidence is the model's backtested median |% error| for the same positional area and value tier — no prediction intervals.
           </div>
         </div>
         <div class="validate-card">
@@ -399,6 +601,60 @@
       </div>
     </section>
   </div>
+</section>
+
+<!-- ========== LEADERS ========== -->
+<section id="view-leaders" class="view">
+  <div class="panel panel-pad">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Leaderboards</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Highest model-valued players by positional area, for the current season.</div>
+      </div>
+    </div>
+    <div class="grid-2" id="leaders-grid"></div>
+  </div>
+</section>
+
+<!-- ========== TEAMS INDEX ========== -->
+<section id="view-teams" class="view">
+  <div class="panel panel-pad">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Teams</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Squad value totals by club. Click a club to see its squad.</div>
+      </div>
+    </div>
+    <div class="table-wrap"><table id="teams-table"></table></div>
+  </div>
+</section>
+
+<!-- ========== TEAM PAGE ========== -->
+<section id="view-team" class="view">
+  <div id="team-body"></div>
+</section>
+
+<!-- ========== COMPARE ========== -->
+<section id="view-compare" class="view">
+  <div class="panel panel-pad">
+    <div class="panel-head">
+      <div>
+        <div class="panel-title">Compare players</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Pick two players to see model value, confidence, bio and stats side by side.</div>
+      </div>
+    </div>
+    <div class="compare-pickers">
+      <input class="index-search" id="cmp-a" type="search" placeholder="Player A…" autocomplete="off" list="player-list">
+      <span class="cmp-vs">vs</span>
+      <input class="index-search" id="cmp-b" type="search" placeholder="Player B…" autocomplete="off" list="player-list">
+    </div>
+    <div id="compare-body"></div>
+  </div>
+</section>
+
+<!-- ========== ABOUT ========== -->
+<section id="view-about" class="view">
+  <div id="about-body"></div>
 </section>
 
 </main>
@@ -423,10 +679,43 @@ const state = {
     plOnly: true,
   },
   current: null,
+  detailCache: new Map(),
+  detailReq: 0,
   view: 'dashboard',
   charts: {},
   feedSide: 'all'
 };
+
+/* ---------- Theme ---------- */
+function cssVar(name, fallback) {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return v || fallback;
+}
+const cGrid = () => cssVar('--line', '#e9ecf0');
+const cTick = () => cssVar('--text-2', '#4c535e');
+const cText = () => cssVar('--text', '#151922');
+const isDark = () => document.documentElement.dataset.theme === 'dark';
+// Primary accent line (value trajectory, compare A): readable on both themes.
+const cPrimary = () => isDark() ? '#c58fce' : '#37003c';
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  try { localStorage.setItem('pl-theme', theme); } catch (e) {}
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+  if (window.Chart) { Chart.defaults.color = cTick(); Chart.defaults.borderColor = cGrid(); }
+}
+function setupTheme() {
+  let saved = 'light';
+  try { saved = localStorage.getItem('pl-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch (e) {}
+  applyTheme(saved);
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.onclick = () => {
+    const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    handleRoute();  // re-render current view so charts pick up new colors
+  };
+}
 
 async function boot() {
   const [p, m, mp] = await Promise.all([
@@ -447,45 +736,82 @@ async function boot() {
   const scoredSeasons = Array.from(new Set(
     p.filter(r => (r.value?.predicted != null) || (r.wage?.predicted != null)).map(r => r.season)
   )).sort();
-  const seasonSel = document.getElementById('season');
-  for (const s of scoredSeasons) seasonSel.add(new Option(s, s));
-  seasonSel.value = scoredSeasons[scoredSeasons.length - 1];
+  // Only one prediction season (end-of-season snapshot) exists, so it's shown as static text.
+  state.season = scoredSeasons[scoredSeasons.length - 1];
+  state.snapshot = 'end';
+  const stag = document.getElementById('season-tag');
+  if (stag) stag.textContent = `${state.season} · End of season`;
 
-  setupNav(); setupControls(); setupSearch();
+  setupTheme();
+  setupNav(); setupControls(); setupSearch(); setupPlayersIndex(); setupCompare();
   buildFilters('under-filters', scoredSeasons);
   buildFilters('over-filters',  scoredSeasons);
 
-  renderDashboard();
-  renderMispricing('underpays'); renderMispricing('overpays');
-  renderInsights();
+  // Deep-link: render whatever route the URL points at (default dashboard).
+  if (!location.hash) location.replace('#/dashboard');
+  handleRoute();
+
+  const ov = document.getElementById('app-loading');
+  if (ov) { ov.classList.add('done'); setTimeout(() => ov.remove(), 300); }
 }
 
-/* ---------- Nav / controls ---------- */
+/* ---------- Router (hash-based, shareable URLs) ---------- */
+// Routes: #/dashboard  #/players  #/player/<id>[/<season>]  #/underpays  #/overpays
+//         #/compare[/<idA>/<idB>]  #/insights  #/about
+const VIEW_FOR = {
+  dashboard:'dashboard', players:'players', player:'player', underpays:'underpays',
+  overpays:'overpays', leaders:'leaders', teams:'teams', team:'team',
+  compare:'compare', insights:'insights', about:'about',
+};
+
+function parseRoute() {
+  const raw = (location.hash || '').replace(/^#\/?/, '');
+  const parts = raw.split('/').filter(Boolean);
+  return { name: parts[0] || 'dashboard', params: parts.slice(1) };
+}
+
+function navigate(path) {
+  const want = '#/' + path;
+  if (location.hash === want) handleRoute();   // same hash → force re-render
+  else location.hash = want;                   // triggers hashchange → handleRoute
+}
+
+function handleRoute() {
+  const { name, params } = parseRoute();
+  const view = VIEW_FOR[name] || 'dashboard';
+  state.view = view;
+  // Activate the view BEFORE rendering so canvases have real layout (fixes 0×0 charts).
+  const navKey = (view === 'player') ? 'players' : view;
+  for (const b of document.querySelectorAll('#nav button')) b.classList.toggle('active', b.dataset.view === navKey);
+  for (const v of document.querySelectorAll('.view')) v.classList.toggle('active', v.id === `view-${view}`);
+  document.body.classList.remove('nav-open');
+
+  if (name === 'dashboard')      renderDashboard();
+  else if (name === 'players')   renderPlayersIndex();
+  else if (name === 'player')    selectPlayerKey(Number(params[0]), params[1]);
+  else if (name === 'underpays') renderMispricing('underpays');
+  else if (name === 'overpays')  renderMispricing('overpays');
+  else if (name === 'leaders')   renderLeaders();
+  else if (name === 'teams')     renderTeams();
+  else if (name === 'team')      renderTeam(decodeURIComponent(params.join('/')));
+  else if (name === 'compare')   renderCompare(params);
+  else if (name === 'insights')  renderInsights();
+  else if (name === 'about')     renderAbout();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function setupNav() {
   for (const b of document.querySelectorAll('#nav button')) {
-    b.onclick = () => {
-      state.view = b.dataset.view;
-      for (const x of document.querySelectorAll('#nav button')) x.classList.toggle('active', x===b);
-      for (const v of document.querySelectorAll('.view')) v.classList.toggle('active', v.id === `view-${state.view}`);
-      if (state.view === 'players' && state.current) renderPlayer(state.current);
-      if (state.view === 'dashboard') renderDashboard();
-      if (state.view === 'underpays') renderMispricing('underpays');
-      if (state.view === 'overpays')  renderMispricing('overpays');
-      if (state.view === 'insights')  renderInsights();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    };
+    b.onclick = () => navigate(b.dataset.view);
   }
+  const toggle = document.getElementById('nav-toggle');
+  if (toggle) toggle.onclick = () => document.body.classList.toggle('nav-open');
+  window.addEventListener('hashchange', handleRoute);
 }
 
 function setupControls() {
-  document.getElementById('target').onchange = () => {
-    renderDashboard();
-    if (state.current) renderPlayer(state.current);
-    renderMispricing('underpays'); renderMispricing('overpays');
-    renderInsights();
-  };
-  document.getElementById('season').onchange   = () => { if (state.current) selectPlayerKey(state.current.player_id, document.getElementById('season').value); };
-  document.getElementById('snapshot').onchange = () => { if (state.current) selectPlayerKey(state.current.player_id); };
+  // Target switch: re-render whatever page is open (plus the always-live index/feed data).
+  document.getElementById('target').onchange = () => { handleRoute(); };
 
   // Dashboard feed tabs
   for (const chip of document.querySelectorAll('[data-feed]')) {
@@ -500,14 +826,12 @@ function setupControls() {
 
 const POSITIONS = ['GK','CB','FB','DM','CM','AM','W','ST'];
 const VERDICTS  = ['excellent','good','fair','poor'];
+// The 20 Premier League clubs for 2025-26 (canonical names; data is normalised upstream).
 const PL_CLUBS = new Set([
-  'arsenal','aston villa','bournemouth','brentford','brighton','brighton & hove al..',
-  'brighton & hove albion','burnley','chelsea','crystal palace','everton','fulham',
-  'ipswich','ipswich town','leeds','leeds united','leicester','leicester city',
-  'liverpool','luton','luton town','manchester city','manchester united','man city',
-  'man united','newcastle','newcastle united','nottingham forest','sheffield united',
-  'southampton','sunderland','tottenham','tottenham hotspur','west ham','west ham united',
-  'wolves','wolverhampton','wolverhampton wanderers',
+  'arsenal','aston villa','bournemouth','brentford','brighton & hove albion','burnley',
+  'chelsea','crystal palace','everton','fulham','leeds united','liverpool',
+  'manchester city','manchester united','newcastle united','nottingham forest',
+  'sunderland','tottenham hotspur','west ham united','wolverhampton wanderers',
 ]);
 function isPLClub(c) { return !!c && PL_CLUBS.has(String(c).toLowerCase()); }
 
@@ -694,17 +1018,20 @@ function allScoredRows(target) {
     if (r.snapshot !== 'end') continue;  // dedupe to one row per player-season
     const vsModel = (t.actual - t.predicted) / t.predicted;
     const residual_log = Math.log1p(t.actual) - Math.log1p(t.predicted);
-    const sigma_log = (t.upper != null && t.lower != null)
-      ? Math.max(0.01, (Math.log1p(t.upper) - Math.log1p(t.lower)) / 2.5631) : null;
-    const z = sigma_log ? residual_log / sigma_log : vsModel;
     out.push({
       player: r.player, player_id: r.player_id, club: r.club,
       season: r.season, position: r.position, bio: r.bio,
       minutes: r.minutes, age: r.age,
       actual: t.actual, pred: t.predicted,
-      vsModel, z, verdict: t.verdict,
+      vsModel, residual_log, verdict: t.verdict,
     });
   }
+  // z-score the log residual by a single global sigma (intervals were dropped; this
+  // reproduces the old near-constant-width ranking with no per-player interval needed).
+  const resid = out.map(o => o.residual_log);
+  const mean = resid.reduce((a, b) => a + b, 0) / (resid.length || 1);
+  const sigma = Math.max(0.01, Math.sqrt(resid.reduce((a, b) => a + (b - mean) ** 2, 0) / (resid.length || 1)));
+  for (const o of out) o.z = o.residual_log / sigma;
   return out;
 }
 
@@ -716,10 +1043,10 @@ function renderDashboard() {
 
   document.getElementById('kpi-r2').textContent  = meta.point_r2_log != null ? meta.point_r2_log.toFixed(3) : '—';
   document.getElementById('kpi-mae').textContent = meta.point_mae_log != null ? meta.point_mae_log.toFixed(3) : '—';
-  document.getElementById('kpi-cov').innerHTML   = (meta.achieved_coverage != null
-    ? (meta.achieved_coverage*100).toFixed(1) + '%'
+  document.getElementById('kpi-cov').innerHTML   = (meta.median_ape_pct != null
+    ? '±' + meta.median_ape_pct.toFixed(1) + '%'
     : '—');
-  document.getElementById('model-tag').innerHTML = `⚙ ${state.meta.targets[target]?.model?.toUpperCase() || 'LGBM'} · R² ${meta.point_r2_log?.toFixed(2) ?? '—'} · ${(meta.achieved_coverage*100 || 0).toFixed(0)}% cov`;
+  document.getElementById('model-tag').innerHTML = `⚙ ${state.meta.targets[target]?.model?.toUpperCase() || 'LGBM'} · R² ${meta.point_r2_log?.toFixed(2) ?? '—'} · ±${(meta.median_ape_pct ?? 0).toFixed(0)}% typ. err`;
 
   // Dataset KPIs
   const rows = allScoredRows(target);
@@ -745,6 +1072,16 @@ function renderDashboard() {
     <span class="legend-item"><i class="check ck-pink">✓</i>Poor ${vCounts.poor}</span>
   `;
 
+  // Confidence split (High / Medium / Low) across scored players for this target.
+  const cc = { High:0, Medium:0, Low:0, Unknown:0 };
+  for (const r of rows) cc[computeConfidence(target, r.position, r.pred).label]++;
+  const ct = (cc.High + cc.Medium + cc.Low) || 1;
+  const CCOL = { High:'#166534', Medium:'#b45309', Low:'#991b1b' };
+  document.getElementById('conf-split').innerHTML =
+    ['High','Medium','Low'].map(k => `<span style="width:${cc[k]/ct*100}%;background:${CCOL[k]}"></span>`).join('');
+  document.getElementById('conf-legend').innerHTML =
+    ['High','Medium','Low'].map(k => `<span class="ci"><span class="dot" style="background:${CCOL[k]}"></span>${k} ${cc[k]} (${(cc[k]/ct*100).toFixed(0)}%)</span>`).join('');
+
   renderScatter(rows, unit);
   renderVerdictChart(vCounts);
   renderDashboardFeed();
@@ -767,18 +1104,18 @@ function renderScatter(rows, unit) {
         label: 'Scored players',
         data,
         backgroundColor: data.map(d => colorFor(d.v) + 'cc'),
-        borderColor: '#fff', borderWidth: 0.5, pointRadius: 3.2
+        borderColor: cssVar('--panel','#fff'), borderWidth: 0.5, pointRadius: 3.2
       }, {
         type: 'line', label: 'Perfect prediction',
         data: [{x:mins, y:mins}, {x:maxs, y:maxs}],
-        borderColor: '#171a20', borderDash: [4,4], borderWidth: 1.2, pointRadius: 0, fill: false
+        borderColor: cText(), borderDash: [4,4], borderWidth: 1.2, pointRadius: 0, fill: false
       }]
     },
     options: {
       maintainAspectRatio: false,
       scales: {
-        x: { title:{display:true,text:`Actual (log₁₀ ${unit})`,color:'#8b919b',font:{size:10}}, grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10},callback:v=>unit+Math.round(10**v).toLocaleString('en-US')}},
-        y: { title:{display:true,text:`Predicted (log₁₀ ${unit})`,color:'#8b919b',font:{size:10}}, grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10},callback:v=>unit+Math.round(10**v).toLocaleString('en-US')}}
+        x: { title:{display:true,text:`Actual (log₁₀ ${unit})`,color:cTick(),font:{size:10}}, grid:{color:cGrid()}, ticks:{color:cTick(),font:{size:10},callback:v=>unit+Math.round(10**v).toLocaleString('en-US')}},
+        y: { title:{display:true,text:`Predicted (log₁₀ ${unit})`,color:cTick(),font:{size:10}}, grid:{color:cGrid()}, ticks:{color:cTick(),font:{size:10},callback:v=>unit+Math.round(10**v).toLocaleString('en-US')}}
       },
       plugins: {
         legend: { display: false },
@@ -792,7 +1129,7 @@ function renderScatter(rows, unit) {
         if (!items.length) return;
         const d = items[0].element.$context.raw;
         const row = state.players.find(r => r.player === d.name);
-        if (row) { selectPlayerKey(row.player_id); switchView('players'); }
+        if (row) navigate('player/' + row.player_id);
       }
     }
   });
@@ -820,7 +1157,7 @@ function renderVerdictChart(counts) {
         tooltip: { callbacks: { label: ctx => `${ctx.parsed.x} players` } },
       },
       scales: {
-        x: { grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10}} },
+        x: { grid:{color:cGrid()}, ticks:{color:cTick(),font:{size:10}} },
         y: { grid:{display:false}, ticks:{color:'#4c535e',font:{size:12,weight:'500'}} }
       }
     }
@@ -844,7 +1181,7 @@ function renderDashboardFeed() {
 /* ---------- Mispricing table (shared renderer) ---------- */
 function renderMispTable(tableId, rows, unit, opts = {}) {
   const tbl = document.getElementById(tableId);
-  if (!rows.length) { tbl.innerHTML = '<tbody><tr><td style="padding:30px;text-align:center;color:#8b919b">No players match.</td></tr></tbody>'; return; }
+  if (!rows.length) { tbl.innerHTML = '<tbody><tr><td style="padding:30px;text-align:center;color:var(--muted)">No players match.</td></tr></tbody>'; return; }
   tbl.innerHTML = `
     <thead><tr>
       ${opts.showRank ? '<th style="width:30px">#</th>' : '<th style="width:30px">#</th>'}
@@ -874,15 +1211,8 @@ function renderMispTable(tableId, rows, unit, opts = {}) {
     </tbody>
   `;
   for (const tr of tbl.querySelectorAll('tr[data-pid]')) {
-    tr.onclick = () => { selectPlayerKey(Number(tr.dataset.pid), tr.dataset.season); switchView('players'); };
+    tr.onclick = () => navigate('player/' + tr.dataset.pid + (tr.dataset.season ? '/' + tr.dataset.season : ''));
   }
-}
-
-function switchView(view) {
-  state.view = view;
-  for (const b of document.querySelectorAll('#nav button')) b.classList.toggle('active', b.dataset.view===view);
-  for (const v of document.querySelectorAll('.view')) v.classList.toggle('active', v.id === `view-${view}`);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /* ---------- Dedicated mispricing views ---------- */
@@ -926,7 +1256,7 @@ function renderMispricing(side) {
       indexAxis:'y', maintainAspectRatio:false,
       plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.parsed.x.toFixed(1)+'% ' + (side==='underpays'?'below model':'above model')}}},
       scales:{
-        x:{ grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10},callback:v=>v+'%'} },
+        x:{ grid:{color:cGrid()}, ticks:{color:cTick(),font:{size:10},callback:v=>v+'%'} },
         y:{ grid:{display:false}, ticks:{color:'#4c535e',font:{size:11}} }
       }
     }
@@ -953,39 +1283,66 @@ function renderInsights() {
       indexAxis:'y', maintainAspectRatio:false,
       plugins:{ legend:{display:false} },
       scales:{
-        x:{ grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10}} },
+        x:{ grid:{color:cGrid()}, ticks:{color:cTick(),font:{size:10}} },
         y:{ grid:{display:false}, ticks:{color:'#4c535e',font:{size:11}} }
       }
     }
   });
 }
 
-/* ---------- Search ---------- */
+/* ---------- Search (live dropdown with photos) ---------- */
 function setupSearch() {
   const box = document.getElementById('searchbox');
+  const dd = document.getElementById('search-dd');
+  // Populate the compare inputs' datalist (still a plain datalist there).
   const dl = document.getElementById('player-list');
-  dl.innerHTML = '';
-  const nameToPlayer = new Map();
-  for (const [, latest] of state.byPlayerLatest) nameToPlayer.set((latest.player||'').toLowerCase(), latest);
-  for (const latest of state.byPlayerLatest.values()) {
-    const opt = document.createElement('option');
-    opt.value = latest.player;
-    opt.label = `${latest.club || ''} · ${latest.position || ''}`;
-    dl.appendChild(opt);
+  if (dl) { dl.innerHTML = ''; for (const p of state.byPlayerLatest.values()) { const o = document.createElement('option'); o.value = p.player; dl.appendChild(o); } }
+
+  const all = Array.from(state.byPlayerLatest.values());
+  let matches = [], active = -1;
+
+  function close() { dd.hidden = true; active = -1; }
+  function render() {
+    if (!matches.length) { dd.innerHTML = `<div class="sd-empty">No players found</div>`; dd.hidden = false; return; }
+    const target = document.getElementById('target').value;
+    const unit = target === 'value' ? '€' : '£';
+    dd.innerHTML = matches.map((p, i) => {
+      const v = playerDisplayValue(p, target);
+      return `<div class="sd-item${i===active?' active':''}" data-pid="${p.player_id}" data-season="${p.season}">
+        <img loading="lazy" src="${p.bio?.image_url||'./placeholder.webp'}" onerror="this.onerror=null;this.src='./placeholder.webp'">
+        <div><div class="sd-name">${escapeHtml(p.player)}</div><div class="sd-sub">${escapeHtml(p.position||'')} · ${escapeHtml(p.club||'')}</div></div>
+        <div class="sd-val">${v!=null?fmt(v,unit):''}</div>
+      </div>`;
+    }).join('');
+    dd.hidden = false;
+    for (const el of dd.querySelectorAll('.sd-item'))
+      el.onmousedown = (e) => { e.preventDefault(); go(el.dataset.pid, el.dataset.season); };
   }
-  function tryPick() {
-    const q = box.value.trim().toLowerCase(); if (!q) return;
-    const hit = nameToPlayer.get(q) || Array.from(nameToPlayer.values()).find(r => (r.player||'').toLowerCase().startsWith(q));
-    if (hit) { selectPlayerKey(hit.player_id); switchView('players'); }
+  function search(q) {
+    q = q.trim().toLowerCase();
+    if (!q) { close(); return; }
+    matches = all.filter(p => (p.player||'').toLowerCase().includes(q) || (p.club||'').toLowerCase().includes(q))
+      .sort((a,b)=>(playerDisplayValue(b,'value')??-1)-(playerDisplayValue(a,'value')??-1)).slice(0, 8);
+    active = -1; render();
   }
-  box.addEventListener('input',   () => tryPick());
-  box.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); tryPick(); } });
+  function go(pid, season) { box.value = ''; close(); navigate('player/' + pid + (season ? '/' + season : '')); }
+
+  box.addEventListener('input', () => search(box.value));
+  box.addEventListener('focus', () => { if (box.value.trim()) search(box.value); });
+  box.addEventListener('keydown', e => {
+    if (dd.hidden) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active+1, matches.length-1); render(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active-1, 0); render(); }
+    else if (e.key === 'Enter') { e.preventDefault(); const pick = matches[active] || matches[0]; if (pick) go(pick.player_id, pick.season); }
+    else if (e.key === 'Escape') close();
+  });
+  document.addEventListener('click', e => { if (!e.target.closest('.search-wrap')) close(); });
 }
 
 function selectPlayerKey(player_id, preferSeason) {
   const target = document.getElementById('target').value;
-  const snap = document.getElementById('snapshot').value;
-  const candidates = [preferSeason, document.getElementById('season').value, '2025-26', '2024-25', '2023-24'];
+  const snap = state.snapshot || 'end';
+  const candidates = [preferSeason, state.season, '2025-26', '2024-25', '2023-24'];
   let want = null;
   for (const s of candidates) {
     if (!s) continue;
@@ -994,31 +1351,61 @@ function selectPlayerKey(player_id, preferSeason) {
              || state.byKey.get(`${player_id}|${s}|start`);
     if (row && row[target] && row[target].predicted != null) { want = row; break; }
   }
-  if (!want) want = state.byKey.get(`${player_id}|${document.getElementById('season').value}|${snap}`) || state.byPlayerLatest.get(player_id);
+  if (!want) want = state.byKey.get(`${player_id}|${state.season}|${snap}`) || state.byPlayerLatest.get(player_id);
   if (!want) return;
   state.current = want;
-  if (want.season !== document.getElementById('season').value) document.getElementById('season').value = want.season;
-  if (want.snapshot !== document.getElementById('snapshot').value) document.getElementById('snapshot').value = want.snapshot;
   renderPlayer(want);
 }
 
+/* ---------- Lazy per-player detail ---------- */
+async function loadDetail(pid) {
+  if (!state.detailCache) state.detailCache = new Map();
+  if (state.detailCache.has(pid)) return state.detailCache.get(pid);
+  let d = null;
+  try { const r = await fetch('./data/player/' + pid + '.json'); if (r.ok) d = await r.json(); }
+  catch (e) { d = null; }
+  state.detailCache.set(pid, d);
+  return d;
+}
+
 /* ---------- Player detail ---------- */
-function renderPlayer(row) {
+async function renderPlayer(row) {
   const target = document.getElementById('target').value;
   const unit = target === 'value' ? '€' : '£';
-  const t = row[target]; const bio = row.bio || {};
+  const t = row[target];
+  const reqId = ++state.detailReq;  // guard against out-of-order async renders
+  document.getElementById('player-detail').innerHTML =
+    `<a href="#/players" class="back-link">← All players</a><p class="empty">Loading ${escapeHtml(row.player)}…</p>`;
+  const detail = row.player_tm_id ? await loadDetail(row.player_id) : null;
+  if (reqId !== state.detailReq || state.current !== row) return;  // a newer render superseded this
+
+  const bio = (detail && detail.bio) || row.bio || {};
+  const careerList = (detail && detail.career) || [];
+  const seasonStats = (detail && detail.season_stats) || [];
+  const valueTraj = (detail && detail.value_trajectory) || [];
+  const shapTop = (detail && detail.shap && detail.shap[`${row.season}|${row.snapshot}`] && detail.shap[`${row.season}|${row.snapshot}`][target]) || [];
   const image = bio.image_url || './placeholder.webp';
   const age = row.age ? row.age.toFixed(1) : '—';
   const verdict = t?.verdict;
   const vLabel = verdict?.label || 'unknown';
 
-  const widthRel = (t && t.lower != null && t.upper != null && t.predicted)
-    ? (t.upper - t.lower) / t.predicted : null;
+  // Confidence = backtested typical |% error| for this player's positional AREA and value
+  // TIER (from meta.confidence, measured on the 2025-26 holdout). No intervals. Thresholds
+  // are per-area, because GK/attack are inherently harder to pin than defence/midfield.
+  const conf = state.meta.targets[target]?.confidence || null;
   let confLabel = 'Unknown', confColor = '#4b5563', confHint = '';
-  if (widthRel != null) {
-    if (widthRel < 1.0)      { confLabel = 'High';     confColor = '#166534'; confHint = 'Model is reasonably sure about this one.'; }
-    else if (widthRel < 2.0) { confLabel = 'Moderate'; confColor = '#b45309'; confHint = 'Treat as a ballpark; comparable players vary.'; }
-    else                     { confLabel = 'Low';      confColor = '#991b1b'; confHint = 'Model has little conviction here — thin-stats player.'; }
+  if (conf && t && t.predicted != null) {
+    const area = conf.area_of_position[(row.position || '').toUpperCase()];
+    const [b1, b2, b3] = conf.tier_bounds, L = conf.tier_labels, v = t.predicted;
+    const tier = v < b1 ? L[0] : v < b2 ? L[1] : v < b3 ? L[2] : L[3];
+    const typ = (area && conf.lookup[area]) ? conf.lookup[area][tier] : null;
+    if (area && typ != null) {
+      const [hi, lo] = conf.area_thresholds[area];
+      const x = typ.toFixed(0), areaName = { GK: 'goalkeepers', DEF: 'defenders', MID: 'midfielders', ATT: 'attackers' }[area] || area;
+      if (typ < hi)       { confLabel = 'High';   confColor = '#166534'; confHint = `For ${areaName} in this value tier, the model is typically within ±${x}%.`; }
+      else if (typ <= lo) { confLabel = 'Medium'; confColor = '#b45309'; confHint = `For ${areaName} in this value tier, the model is typically ±${x}% off — treat as a ballpark.`; }
+      else                { confLabel = 'Low';    confColor = '#991b1b'; confHint = `For ${areaName} in this value tier, the model is typically ±${x}% off — low conviction.`; }
+    }
   }
 
   const vsModel = (t && t.actual != null && t.predicted != null) ? (t.actual - t.predicted) / t.predicted : null;
@@ -1026,28 +1413,42 @@ function renderPlayer(row) {
   let summary = '';
   if (vsModel == null) summary = 'No market value on record — model prediction only.';
   else if (absPct <= 20) summary = `Market and model agree within ${absPct.toFixed(0)}%. Nothing unusual.`;
-  else if (widthRel && widthRel > 2.0) summary = `Market is ${absPct.toFixed(0)}% ${vsModel<0?'below':'above'} the model, but confidence is low — the gap is probably noise.`;
+  else if (confLabel === 'Low') summary = `Market is ${absPct.toFixed(0)}% ${vsModel<0?'below':'above'} the model, but confidence is low — the gap is probably noise.`;
   else if (vsModel < 0) summary = `Market pays ${absPct.toFixed(0)}% less than the model. Investigate: injury, out-of-favour, contract leverage, or a signal the model cannot see.`;
   else summary = `Market pays ${absPct.toFixed(0)}% more than the model. Investigate: hype premium, manager demand, youth potential, or tactical fit.`;
 
   document.getElementById('player-detail').innerHTML = `
+    <a href="#/players" class="back-link">← All players</a>
     <div class="player-header">
       <img src="${image}" alt="${escapeHtml(row.player)}" loading="lazy" onerror="this.onerror=null;this.src='./placeholder.webp'">
       <div>
         <h1>${escapeHtml(row.player)}</h1>
         <div class="subtitle">
           <span class="pill">${escapeHtml(bio.sub_position || row.position || '—')}</span>
-          <span class="pill">${escapeHtml(row.club || '—')}</span>
+          ${row.club ? `<a class="pill pill-link" href="#/team/${encodeURIComponent(row.club)}">${escapeHtml(row.club)}</a>` : `<span class="pill">—</span>`}
           <span class="pill">${escapeHtml(bio.country_of_citizenship || '—')}</span>
           <span class="pill">${age} yrs</span>
           <span class="pill">${row.season} · ${row.snapshot}</span>
+          ${bio.contract_expiration_date ? `<span class="pill">📄 ${bio.contract_expiration_date}</span>` : ''}
         </div>
       </div>
       <div class="verdict-stack">
         <span class="vchip v-${vLabel}">${vLabel}</span>
-        ${verdict ? `<span class="vchip v-unknown">${verdict.within_interval ? 'inside interval' : 'outside interval'}</span>` : ''}
+        ${confLabel !== 'Unknown' ? `<span class="vchip v-unknown" style="color:${confColor}">${confLabel} confidence</span>` : ''}
       </div>
     </div>
+    ${!row.player_tm_id ? `<div class="data-note">Limited data: no Transfermarkt profile matched for this player, so photo, market-value history, career and season stats are unavailable.</div>` : ''}
+    ${(() => {
+      const ls = seasonStats[seasonStats.length - 1] || {};
+      const cards = [
+        ['TM current value', fmtFull(bio.tm_current_market_value_eur, '€')],
+        ['TM peak value', fmtFull(bio.tm_highest_market_value_eur, '€')],
+        ['Age', age + (age !== '—' ? ' yrs' : '')],
+        ['Minutes', ls.minutes != null ? ls.minutes.toLocaleString('en-US') : (row.minutes != null ? row.minutes.toLocaleString('en-US') : '—')],
+        ['Goals + Assists', (ls.goals != null || ls.assists != null) ? `${ls.goals ?? 0} + ${ls.assists ?? 0}` : '—'],
+      ];
+      return `<div class="hero-stats">${cards.map(([l, v]) => `<div class="hero-stat"><div class="metric-label">${l}</div><div class="hs-val">${v}</div></div>`).join('')}</div>`;
+    })()}
 
     ${t && t.predicted != null ? `
     <div class="grid-3 mt">
@@ -1063,14 +1464,14 @@ function renderPlayer(row) {
       <div class="panel panel-pad">
         <div class="metric-label">Confidence</div>
         <div class="metric-value" style="font-size:24px;margin-top:4px;color:${confColor}">${confLabel}</div>
-        <div style="font-size:11px;color:#8b919b;margin-top:4px">${confHint}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">${confHint}</div>
       </div>
     </div>
-    <div style="color:#656c77;font-size:12px;margin:10px 2px 0">${summary}</div>
+    <div style="color:var(--muted);font-size:12px;margin:10px 2px 0">${summary}</div>
     ` : `
     <div class="panel panel-pad mt" style="border-style:dashed;background:#fafbfc">
       <strong>No model prediction for this season.</strong>
-      <div style="color:#8b919b;font-size:11px;margin-top:4px">Predictions are scored only on the 2025-26 holdout.</div>
+      <div style="color:var(--muted);font-size:11px;margin-top:4px">Predictions are scored only on the 2025-26 holdout.</div>
     </div>`}
 
     <div class="grid-2 mt">
@@ -1098,13 +1499,13 @@ function renderPlayer(row) {
       </div>
     </div>
 
-    ${row.value_trajectory?.length ? `
+    ${valueTraj.length ? `
     <div class="panel panel-pad mt chart-panel" style="min-height:300px">
       <div class="panel-head"><div class="panel-title">Market value over time (Transfermarkt)</div></div>
       <div class="chart-wrap"><canvas id="val-traj-chart"></canvas></div>
     </div>` : ''}
 
-    ${row.season_stats?.length ? `
+    ${seasonStats.length ? `
     <div class="panel panel-pad mt chart-panel" style="min-height:300px">
       <div class="panel-head"><div class="panel-title">Season by season</div></div>
       <div class="chart-wrap"><canvas id="stats-chart"></canvas></div>
@@ -1116,9 +1517,9 @@ function renderPlayer(row) {
         <table>
           <thead><tr><th style="padding-left:18px">Date</th><th>From</th><th>To</th><th class="num" style="padding-right:18px">Fee</th></tr></thead>
           <tbody>
-          ${(row.career || []).slice().reverse().slice(0, 12).map(c =>
+          ${careerList.slice().reverse().slice(0, 12).map(c =>
             `<tr><td style="padding-left:18px">${c.date||'—'}</td><td>${escapeHtml(c.from_club||'')}</td><td>${escapeHtml(c.to_club||'')}</td><td class="num" style="padding-right:18px">${c.fee_eur ? fmt(c.fee_eur,'€') : '—'}</td></tr>`
-          ).join('') || '<tr><td colspan="4" style="padding:20px;text-align:center;color:#8b919b">No career data</td></tr>'}
+          ).join('') || '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--muted)">No career data</td></tr>'}
           </tbody>
         </table>
       </div>
@@ -1127,7 +1528,7 @@ function renderPlayer(row) {
 
   // SHAP bars (positive right, negative left, centred at 0)
   const shapEl = document.getElementById('player-shap');
-  const top = (t?.shap_top) || [];
+  const top = shapTop;
   const maxAbs = Math.max(...top.map(s=>Math.abs(s.contribution_log)), 0.01);
   shapEl.innerHTML = top.map(s => {
     const halfPct = Math.min(50, Math.abs(s.contribution_log) / maxAbs * 50);
@@ -1138,10 +1539,10 @@ function renderPlayer(row) {
         <div class="v ${isPos?'pos':'neg'}">${isPos?'+':''}${s.contribution_log.toFixed(2)}</div>
         <div class="bar"><span class="${isPos?'pos':'neg'}" style="width:${halfPct}%"></span></div>
       </div>`;
-  }).join('') || '<div style="color:#8b919b;padding:14px">No prediction for this row</div>';
+  }).join('') || '<div style="color:var(--muted);padding:14px">No prediction for this row</div>';
 
-  if (row.value_trajectory?.length) drawValueTrajectory(row.value_trajectory);
-  if (row.season_stats?.length) drawSeasonStats(row.season_stats);
+  if (valueTraj.length) drawValueTrajectory(valueTraj);
+  if (seasonStats.length) drawSeasonStats(seasonStats);
 }
 
 function drawValueTrajectory(points) {
@@ -1149,12 +1550,12 @@ function drawValueTrajectory(points) {
   if (state.charts['val-traj']) state.charts['val-traj'].destroy();
   state.charts['val-traj'] = new Chart(canvas, {
     type:'line',
-    data:{ labels: points.map(p=>p.date), datasets:[{ label:'TM market value (€)', data: points.map(p=>p.market_value_eur), borderColor:'#37003c', backgroundColor:'#37003c14', fill:true, tension:0.25, pointRadius:2 }]},
+    data:{ labels: points.map(p=>p.date), datasets:[{ label:'TM market value (€)', data: points.map(p=>p.market_value_eur), borderColor:cPrimary(), backgroundColor:(isDark()?'#c58fce22':'#37003c14'), fill:true, tension:0.25, pointRadius:2 }]},
     options:{ maintainAspectRatio:false,
       plugins:{legend:{display:false}, tooltip:{callbacks:{label:ctx=>'€'+ctx.parsed.y.toLocaleString('en-US')}}},
       scales:{
-        x:{ grid:{display:false}, ticks:{color:'#8b919b',font:{size:10}} },
-        y:{ grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10},callback:v=>'€'+(v/1_000_000).toFixed(0)+'M'} }
+        x:{ grid:{display:false}, ticks:{color:cTick(),font:{size:10}} },
+        y:{ grid:{color:cGrid()}, ticks:{color:cTick(),font:{size:10},callback:v=>'€'+(v/1_000_000).toFixed(0)+'M'} }
       }
     }
   });
@@ -1170,18 +1571,329 @@ function drawSeasonStats(stats) {
       datasets:[
         { type:'bar',  label:'Goals',   data: recent.map(s=>s.goals),   backgroundColor:'#16c767cc', yAxisID:'y' },
         { type:'bar',  label:'Assists', data: recent.map(s=>s.assists), backgroundColor:'#4c84e8cc', yAxisID:'y' },
-        { type:'line', label:'Minutes', data: recent.map(s=>s.minutes), borderColor:'#171a20', backgroundColor:'transparent', yAxisID:'y1', tension:0.3, pointRadius:2.5 },
+        { type:'line', label:'Minutes', data: recent.map(s=>s.minutes), borderColor:cText(), backgroundColor:'transparent', yAxisID:'y1', tension:0.3, pointRadius:2.5 },
       ]
     },
     options:{ maintainAspectRatio:false,
-      plugins:{ legend:{position:'bottom', labels:{color:'#4c535e',font:{size:11}}}},
+      plugins:{ legend:{position:'bottom', labels:{color:cTick(),font:{size:11}}}},
       scales:{
-        x:{ grid:{display:false}, ticks:{color:'#8b919b',font:{size:10}} },
-        y:{ position:'left', title:{display:true,text:'G / A',color:'#8b919b',font:{size:10}}, grid:{color:'#f0f2f4'}, ticks:{color:'#8b919b',font:{size:10}}},
-        y1:{position:'right', title:{display:true,text:'Minutes',color:'#8b919b',font:{size:10}}, grid:{drawOnChartArea:false}, ticks:{color:'#8b919b',font:{size:10}}}
+        x:{ grid:{display:false}, ticks:{color:cTick(),font:{size:10}} },
+        y:{ position:'left', title:{display:true,text:'G / A',color:cTick(),font:{size:10}}, grid:{color:cGrid()}, ticks:{color:cTick(),font:{size:10}}},
+        y1:{position:'right', title:{display:true,text:'Minutes',color:cTick(),font:{size:10}}, grid:{drawOnChartArea:false}, ticks:{color:cTick(),font:{size:10}}}
       }
     }
   });
+}
+
+/* ---------- Shared: confidence (cohort typical % error) ---------- */
+const AREA_MAP = { GK:'GK', CB:'DEF', FB:'DEF', DM:'MID', CM:'MID', AM:'MID', W:'ATT', ST:'ATT' };
+const AREA_NAME = { GK:'goalkeepers', DEF:'defenders', MID:'midfielders', ATT:'attackers' };
+
+function computeConfidence(target, position, predictedValue) {
+  const conf = state.meta?.targets?.[target]?.confidence;
+  const out = { label:'Unknown', color:'#4b5563', typ:null, hint:'', area:null };
+  if (!conf || predictedValue == null) return out;
+  const area = conf.area_of_position[(position||'').toUpperCase()];
+  if (!area) return out;
+  const [b1,b2,b3] = conf.tier_bounds, L = conf.tier_labels, v = predictedValue;
+  const tier = v < b1 ? L[0] : v < b2 ? L[1] : v < b3 ? L[2] : L[3];
+  const typ = conf.lookup[area]?.[tier];
+  if (typ == null) return out;
+  const [hi, lo] = conf.area_thresholds[area];
+  out.area = area; out.typ = typ;
+  const x = typ.toFixed(0), who = AREA_NAME[area] || area;
+  if (typ < hi)       { out.label='High';   out.color='#166534'; out.hint=`For ${who} in this value tier, the model is typically within ±${x}%.`; }
+  else if (typ <= lo) { out.label='Medium'; out.color='#b45309'; out.hint=`For ${who} in this value tier, the model is typically ±${x}% off — treat as a ballpark.`; }
+  else                { out.label='Low';    out.color='#991b1b'; out.hint=`For ${who} in this value tier, the model is typically ±${x}% off — low conviction.`; }
+  return out;
+}
+
+function playerDisplayValue(row, target) {
+  const t = row[target];
+  if (t && t.predicted != null) return t.predicted;
+  if (target === 'value') return row.bio?.tm_current_market_value_eur ?? null;
+  return null;
+}
+
+/* ---------- Players index ---------- */
+function setupPlayersIndex() {
+  state.pidx = { q:'', area:'', sort:'value_desc' };
+  const s = document.getElementById('players-search');
+  const sort = document.getElementById('players-sort');
+  s.addEventListener('input', () => { state.pidx.q = s.value.trim().toLowerCase(); renderPlayersIndex(); });
+  sort.addEventListener('change', () => { state.pidx.sort = sort.value; renderPlayersIndex(); });
+  const chipWrap = document.getElementById('players-area-chips');
+  chipWrap.innerHTML = ['','GK','DEF','MID','ATT'].map(a =>
+    `<button class="chip${a===''?' active':''}" data-area="${a}">${a||'All'}</button>`).join('');
+  for (const c of chipWrap.querySelectorAll('button')) c.onclick = () => {
+    state.pidx.area = c.dataset.area;
+    for (const x of chipWrap.querySelectorAll('button')) x.classList.toggle('active', x===c);
+    renderPlayersIndex();
+  };
+}
+
+function renderPlayersIndex() {
+  const target = document.getElementById('target').value;
+  const unit = target === 'value' ? '€' : '£';
+  const { q, area, sort } = state.pidx || { q:'', area:'', sort:'value_desc' };
+  let rows = Array.from(state.byPlayerLatest.values());
+  if (q) rows = rows.filter(r => (r.player||'').toLowerCase().includes(q) || (r.club||'').toLowerCase().includes(q));
+  if (area) rows = rows.filter(r => AREA_MAP[(r.position||'').toUpperCase()] === area);
+  let items = rows.map(r => ({ r, v: playerDisplayValue(r, target) }));
+  if (sort==='value_desc')       items.sort((a,b)=>(b.v??-1)-(a.v??-1));
+  else if (sort==='value_asc')   items.sort((a,b)=>(a.v??Infinity)-(b.v??Infinity));
+  else if (sort==='name')        items.sort((a,b)=>(a.r.player||'').localeCompare(b.r.player||''));
+  else if (sort==='age_asc')     items.sort((a,b)=>(a.r.age??999)-(b.r.age??999));
+  else if (sort==='minutes_desc')items.sort((a,b)=>(b.r.minutes??0)-(a.r.minutes??0));
+  document.getElementById('players-count').textContent =
+    `${items.length} player${items.length===1?'':'s'}${items.length>400?' (showing first 400)':''}`;
+  const tbl = document.getElementById('players-table');
+  tbl.innerHTML = `
+    <thead><tr><th>Player</th><th>Club</th><th>Pos</th><th class="num">Age</th><th class="num">Min</th><th class="num">${target==='value'?'Model value':'Model wage'}</th><th class="num">Conf.</th></tr></thead>
+    <tbody>${items.slice(0,400).map(({r,v})=>{
+      const c = computeConfidence(target, r.position, r[target]?.predicted);
+      return `<tr data-pid="${r.player_id}" data-season="${r.season}">
+        <td><div class="pl-cell"><img loading="lazy" src="${r.bio?.image_url||'./placeholder.webp'}" onerror="this.onerror=null;this.src='./placeholder.webp'"><span>${escapeHtml(r.player)}</span></div></td>
+        <td>${escapeHtml(r.club||'—')}</td>
+        <td>${escapeHtml(r.position||'—')}</td>
+        <td class="num">${r.age?r.age.toFixed(0):'—'}</td>
+        <td class="num">${r.minutes??'—'}</td>
+        <td class="num">${v!=null?fmt(v,unit):'—'}</td>
+        <td class="num">${c.label!=='Unknown'?`<span class="conf-dot" style="color:${c.color}">●</span>`:'—'}</td>
+      </tr>`;}).join('')}</tbody>`;
+  for (const tr of tbl.querySelectorAll('tr[data-pid]'))
+    tr.onclick = () => navigate('player/'+tr.dataset.pid+'/'+tr.dataset.season);
+}
+
+/* ---------- Compare ---------- */
+function setupCompare() {
+  for (const id of ['cmp-a','cmp-b']) {
+    const el = document.getElementById(id);
+    el.addEventListener('change', applyCompareInputs);
+    el.addEventListener('keydown', e => { if (e.key==='Enter'){ e.preventDefault(); applyCompareInputs(); } });
+  }
+}
+function findPlayerByName(name) {
+  const q = (name||'').trim().toLowerCase(); if (!q) return null;
+  for (const v of state.byPlayerLatest.values()) if ((v.player||'').toLowerCase() === q) return v;
+  for (const v of state.byPlayerLatest.values()) if ((v.player||'').toLowerCase().startsWith(q)) return v;
+  return null;
+}
+function applyCompareInputs() {
+  const a = findPlayerByName(document.getElementById('cmp-a').value);
+  const b = findPlayerByName(document.getElementById('cmp-b').value);
+  const ids = [a?.player_id, b?.player_id].filter(x => x != null);
+  navigate('compare' + (ids.length ? '/' + ids.join('/') : ''));
+}
+async function renderCompare(params) {
+  const target = document.getElementById('target').value;
+  const unit = target === 'value' ? '€' : '£';
+  const a0 = params[0] ? state.byPlayerLatest.get(Number(params[0])) : null;
+  const b0 = params[1] ? state.byPlayerLatest.get(Number(params[1])) : null;
+  if (a0) document.getElementById('cmp-a').value = a0.player;
+  if (b0) document.getElementById('cmp-b').value = b0.player;
+  const body = document.getElementById('compare-body');
+  if (!a0 || !b0) { body.innerHTML = `<p class="empty">Choose two players above to compare.</p>`; return; }
+  body.innerHTML = `<p class="empty">Loading…</p>`;
+  // Merge lazy detail (full bio + value trajectory) into each slim row.
+  const [da, db] = await Promise.all([loadDetail(a0.player_id), loadDetail(b0.player_id)]);
+  const merge = (r, d) => ({ ...r, bio: (d && d.bio) || r.bio || {}, value_trajectory: (d && d.value_trajectory) || [] });
+  const a = merge(a0, da), b = merge(b0, db);
+  const col = (r) => {
+    const t = r[target] || {}; const bio = r.bio || {};
+    const c = computeConfidence(target, r.position, t.predicted);
+    return { r, bio, t, c };
+  };
+  const A = col(a), B = col(b);
+  const row = (label, fa, fb) => `<tr><td class="cmp-metric">${label}</td><td>${fa}</td><td>${fb}</td></tr>`;
+  const money = (x) => x!=null ? fmt(x, unit) : '—';
+  const conf = (c) => c.label!=='Unknown' ? `<span style="color:${c.color};font-weight:600">${c.label}</span> <span style="color:var(--muted)">±${c.typ.toFixed(0)}%</span>` : '—';
+  const head = (x) => `<div class="cmp-head"><img src="${x.bio.image_url||'./placeholder.webp'}" onerror="this.onerror=null;this.src='./placeholder.webp'"><div><a href="#/player/${x.r.player_id}">${escapeHtml(x.r.player)}</a><div class="cmp-sub">${escapeHtml(x.bio.sub_position||x.r.position||'')} · ${escapeHtml(x.r.club||'')}</div></div></div>`;
+  body.innerHTML = `
+    <table class="cmp-table">
+      <thead><tr><th></th><th>${head(A)}</th><th>${head(B)}</th></tr></thead>
+      <tbody>
+        ${row(`Model ${target==='value'?'value':'wage'}`, money(A.t.predicted), money(B.t.predicted))}
+        ${row('Actual (market)', money(A.t.actual), money(B.t.actual))}
+        ${row('Confidence', conf(A.c), conf(B.c))}
+        ${row('TM current value', money(A.bio.tm_current_market_value_eur), money(B.bio.tm_current_market_value_eur))}
+        ${row('TM peak value', money(A.bio.tm_highest_market_value_eur), money(B.bio.tm_highest_market_value_eur))}
+        ${row('Age', A.r.age?A.r.age.toFixed(1):'—', B.r.age?B.r.age.toFixed(1):'—')}
+        ${row('Minutes (season)', A.r.minutes??'—', B.r.minutes??'—')}
+        ${row('Contract until', A.bio.contract_expiration_date||'—', B.bio.contract_expiration_date||'—')}
+        ${row('Foot', A.bio.foot||'—', B.bio.foot||'—')}
+        ${row('Height', A.bio.height_cm?A.bio.height_cm+' cm':'—', B.bio.height_cm?B.bio.height_cm+' cm':'—')}
+        ${row('Int‘l caps', A.bio.international_caps??'—', B.bio.international_caps??'—')}
+      </tbody>
+    </table>
+    <div class="panel-pad chart-panel" style="min-height:320px">
+      <div class="panel-title" style="margin-bottom:8px">Market value over time</div>
+      <div class="chart-wrap" style="height:300px"><canvas id="cmp-chart"></canvas></div>
+    </div>`;
+  drawCompareChart(a, b);
+}
+function drawCompareChart(a, b) {
+  const canvas = document.getElementById('cmp-chart'); if (!canvas) return;
+  if (state.charts['cmp']) state.charts['cmp'].destroy();
+  // Category axis over the union of both players' valuation dates (no date adapter needed).
+  const mapOf = r => new Map((r.value_trajectory||[]).map(p => [p.date, p.market_value_eur]));
+  const ma = mapOf(a), mb = mapOf(b);
+  const labels = Array.from(new Set([...ma.keys(), ...mb.keys()])).sort();
+  const series = (m, color, label) => ({
+    label, data: labels.map(d => m.has(d) ? m.get(d) : null),
+    borderColor: color, backgroundColor:'transparent', tension:0.25, pointRadius:0, borderWidth:2, spanGaps:true,
+  });
+  state.charts['cmp'] = new Chart(canvas, {
+    type:'line',
+    data:{ labels, datasets:[ series(ma,cPrimary(),a.player), series(mb,'#16c767',b.player) ] },
+    options:{ maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom', labels:{color:cTick(),font:{size:11}}},
+        tooltip:{callbacks:{label:ctx=>ctx.dataset.label+': €'+(ctx.parsed.y??0).toLocaleString('en-US')}}},
+      scales:{ x:{ grid:{display:false}, ticks:{color:cTick(),font:{size:10},maxTicksLimit:8} },
+               y:{ grid:{color:cGrid()}, ticks:{color:cTick(),font:{size:10},callback:v=>'€'+(v/1_000_000).toFixed(0)+'M'} } }
+    }
+  });
+}
+
+/* ---------- Leaderboards ---------- */
+function renderLeaders() {
+  const target = document.getElementById('target').value;
+  const unit = target === 'value' ? '€' : '£';
+  const areas = ['GK','DEF','MID','ATT'];
+  const AREA_FULL = { GK:'Goalkeepers', DEF:'Defenders', MID:'Midfielders', ATT:'Attackers' };
+  const byArea = { GK:[], DEF:[], MID:[], ATT:[] };
+  for (const r of state.byPlayerLatest.values()) {
+    const area = AREA_MAP[(r.position||'').toUpperCase()];
+    const v = r[target]?.predicted;
+    if (area && v != null) byArea[area].push({ r, v });
+  }
+  const grid = document.getElementById('leaders-grid');
+  grid.innerHTML = areas.map(a => {
+    const list = byArea[a].sort((x,y)=>y.v-x.v).slice(0,10);
+    return `<div class="panel panel-pad">
+      <div class="panel-title" style="margin-bottom:10px">${AREA_FULL[a]}</div>
+      <table class="lead-table"><tbody>
+        ${list.map(({r,v},i)=>{
+          const c=computeConfidence(target, r.position, v);
+          return `<tr data-pid="${r.player_id}" data-season="${r.season}">
+            <td class="lead-rank">${i+1}</td>
+            <td><div class="pl-cell"><img loading="lazy" src="${r.bio?.image_url||'./placeholder.webp'}" onerror="this.onerror=null;this.src='./placeholder.webp'"><span>${escapeHtml(r.player)}</span></div></td>
+            <td class="lead-club">${escapeHtml(r.club||'')}</td>
+            <td class="num"><span class="conf-dot" style="color:${c.color}">●</span></td>
+            <td class="num lead-val">${fmt(v,unit)}</td>
+          </tr>`;}).join('') || '<tr><td class="empty">No players</td></tr>'}
+      </tbody></table></div>`;
+  }).join('');
+  for (const tr of grid.querySelectorAll('tr[data-pid]'))
+    tr.onclick = () => navigate('player/'+tr.dataset.pid+'/'+tr.dataset.season);
+}
+
+/* ---------- Teams index ---------- */
+function teamAggregates(target) {
+  const teams = new Map();
+  for (const r of state.byPlayerLatest.values()) {
+    const club = r.club; if (!club) continue;
+    if (!teams.has(club)) teams.set(club, { club, n:0, total:0, valued:0 });
+    const t = teams.get(club); t.n++;
+    const v = r[target]?.predicted ?? (target==='value' ? r.bio?.tm_current_market_value_eur : null);
+    if (v != null) { t.total += v; t.valued++; }
+  }
+  return Array.from(teams.values());
+}
+function renderTeams() {
+  const target = document.getElementById('target').value;
+  const unit = target === 'value' ? '€' : '£';
+  const rows = teamAggregates(target).sort((a,b)=>b.total-a.total);
+  const tbl = document.getElementById('teams-table');
+  tbl.innerHTML = `
+    <thead><tr><th>Club</th><th class="num">Squad</th><th class="num">${target==='value'?'Total model value':'Total model wage'}</th><th class="num">Avg</th></tr></thead>
+    <tbody>${rows.map(t=>`
+      <tr data-club="${encodeURIComponent(t.club)}">
+        <td><strong>${escapeHtml(t.club)}</strong></td>
+        <td class="num">${t.n}</td>
+        <td class="num">${t.total?fmt(t.total,unit):'—'}</td>
+        <td class="num">${t.valued?fmt(t.total/t.valued,unit):'—'}</td>
+      </tr>`).join('')}</tbody>`;
+  for (const tr of tbl.querySelectorAll('tr[data-club]'))
+    tr.onclick = () => navigate('team/'+tr.dataset.club);
+}
+
+/* ---------- Team page ---------- */
+function renderTeam(club) {
+  const target = document.getElementById('target').value;
+  const unit = target === 'value' ? '€' : '£';
+  const squad = Array.from(state.byPlayerLatest.values())
+    .filter(r => r.club === club)
+    .map(r => ({ r, v: r[target]?.predicted ?? (target==='value'? r.bio?.tm_current_market_value_eur : null) }))
+    .sort((a,b)=>(b.v??-1)-(a.v??-1));
+  const body = document.getElementById('team-body');
+  if (!squad.length) { body.innerHTML = `<a href="#/teams" class="back-link">← All teams</a><p class="empty">No squad found for “${escapeHtml(club)}”.</p>`; return; }
+  const total = squad.reduce((s,x)=>s+(x.v||0),0);
+  const avgAge = (() => { const a=squad.map(x=>x.r.age).filter(x=>x!=null); return a.length?(a.reduce((s,x)=>s+x,0)/a.length):null; })();
+  body.innerHTML = `
+    <a href="#/teams" class="back-link">← All teams</a>
+    <div class="panel panel-pad">
+      <div class="team-head">
+        <h1>${escapeHtml(club)}</h1>
+        <div class="team-stats">
+          <div><span class="metric-label">Squad</span><span class="team-stat">${squad.length}</span></div>
+          <div><span class="metric-label">${target==='value'?'Total model value':'Total model wage'}</span><span class="team-stat">${fmt(total,unit)}</span></div>
+          <div><span class="metric-label">Avg age</span><span class="team-stat">${avgAge?avgAge.toFixed(1):'—'}</span></div>
+        </div>
+      </div>
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Player</th><th>Pos</th><th class="num">Age</th><th class="num">${target==='value'?'Model value':'Model wage'}</th><th class="num">TM value</th><th class="num">Conf.</th></tr></thead>
+          <tbody>${squad.map(({r,v})=>{
+            const c=computeConfidence(target, r.position, r[target]?.predicted);
+            const tm=r.bio?.tm_current_market_value_eur;
+            return `<tr data-pid="${r.player_id}" data-season="${r.season}">
+              <td><div class="pl-cell"><img loading="lazy" src="${r.bio?.image_url||'./placeholder.webp'}" onerror="this.onerror=null;this.src='./placeholder.webp'"><span>${escapeHtml(r.player)}</span></div></td>
+              <td>${escapeHtml(r.position||'—')}</td>
+              <td class="num">${r.age?r.age.toFixed(0):'—'}</td>
+              <td class="num">${v!=null?fmt(v,unit):'—'}</td>
+              <td class="num">${tm!=null?fmt(tm,'€'):'—'}</td>
+              <td class="num">${c.label!=='Unknown'?`<span class="conf-dot" style="color:${c.color}">●</span>`:'—'}</td>
+            </tr>`;}).join('')}</tbody>
+        </table>
+      </div>
+    </div>`;
+  for (const tr of body.querySelectorAll('tr[data-pid]'))
+    tr.onclick = () => navigate('player/'+tr.dataset.pid+'/'+tr.dataset.season);
+}
+
+/* ---------- About ---------- */
+function renderAbout() {
+  const m = state.meta?.targets?.value?.metrics || {};
+  const w = state.meta?.targets?.wage?.metrics || {};
+  const el = document.getElementById('about-body');
+  el.innerHTML = `
+    <div class="about-hero panel panel-pad">
+      <h1>PL Insight</h1>
+      <p>A player valuation model for the 2025-26 Premier League. It predicts each player's transfer-market value and wage from football data, then flags where the market and the model disagree — potential bargains and overpays.</p>
+    </div>
+    <div class="grid-2">
+      <div class="panel panel-pad">
+        <div class="panel-title">How it works</div>
+        <p class="about-p">A LightGBM model is trained on 2023-24, validated on 2024-25 and tested on the held-out 2025-26 season. Features come from Transfermarkt, Understat and Football Manager 2026. Target is <code>log1p(value)</code> — the value spans €100k to €200M, so a log target keeps the model honest across the whole range instead of chasing the few superstars.</p>
+        <p class="about-p">On the 2025-26 holdout it scores R² ${m.point_r2_log?.toFixed(2)??'—'} with a typical error of ±${m.median_ape_pct?.toFixed(0)??'—'}% for value, and R² ${w.point_r2_log?.toFixed(2)??'—'} / ±${w.median_ape_pct?.toFixed(0)??'—'}% for wage.</p>
+      </div>
+      <div class="panel panel-pad">
+        <div class="panel-title">What "confidence" means</div>
+        <p class="about-p">Each prediction shows a confidence tier. It is the model's <strong>backtested typical error</strong> for players in the same positional area (GK / defence / midfield / attack) and value tier — e.g. "midfielders worth €15–40M are usually predicted within ±19%."</p>
+        <p class="about-p">High / Medium / Low thresholds are calibrated per area, because attackers and goalkeepers are inherently harder to value than defenders. It replaces an earlier prediction-interval approach that gave the same width to everyone.</p>
+      </div>
+      <div class="panel panel-pad">
+        <div class="panel-title">Reading the board</div>
+        <p class="about-p"><strong>Underpays</strong> are players the market prices <em>below</em> the model — possible bargains, or a signal the market sees something the model can't (injury, out of favour). <strong>Overpays</strong> are priced <em>above</em> the model — hype, youth upside, or manager demand.</p>
+        <p class="about-p">The verdict chip (excellent / good / fair / poor) is how close the model landed to the actual market value for that player; confidence is how much to trust it in the first place.</p>
+      </div>
+      <div class="panel panel-pad">
+        <div class="panel-title">Data & caveats</div>
+        <p class="about-p">Market values and wages are snapshots and move constantly; this is a season-level model, not a live feed. FM-derived leakage columns (<code>value_high</code>, <code>sell_value</code>, <code>release_clause</code>) are explicitly excluded so the model learns football, not the game engine's own formula.</p>
+        <p class="about-p">Data: Transfermarkt + Understat + Football Manager 2026.</p>
+      </div>
+    </div>`;
 }
 
 boot().catch(e => { document.body.innerHTML = '<p style="color:red;padding:2rem">'+e+'</p>'; });

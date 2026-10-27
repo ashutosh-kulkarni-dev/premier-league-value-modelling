@@ -1,12 +1,12 @@
 """Export the model + results into a static JSON bundle any HTML UI can consume.
 
 Produces four files under `web/data/`:
-  - `players.json`  — per-player predictions, intervals, residuals, top-6 SHAP drivers,
-                      verdict label, bio, career history, season stats timeline, value trajectory
-  - `meta.json`     — model metadata, global SHAP, feature list, metrics
+  - `players.json`  — SLIM per-season rows for lists/tables: predictions, verdict, scalars,
+                      and a small bio subset (image, position, contract, TM value). Fast first load.
+  - `player/<id>.json` — lazy per-player detail: full bio, career history, season-stats timeline,
+                      value trajectory, and per-season SHAP. Fetched on demand when a profile opens.
+  - `meta.json`     — model metadata, global SHAP, feature list, metrics, confidence table
   - `mispricing.json` — ranked mispricing boards (under/over) per target
-  - `bio.json`      — per-player bio keyed by player_id (also inlined into players.json;
-                      shipped separately for apps that want a smaller first payload)
 
 The HTML side has zero backend requirement. Load the JSON with `fetch`, build any UI.
 See `web/README.md` for the data contract.
@@ -22,12 +22,49 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import shap
+from scipy.stats import spearmanr
+from sklearn.metrics import r2_score
 
+from value_wage.confidence import area_of, build_confidence_table
 from value_wage.config import ALL_TARGETS, TARGET_COLUMN, Settings, get_settings
 from value_wage.splits import make_splits
 from value_wage.train import TrainedArtifact, _normalize_na
 
 SHAP_TOP_K = 6
+
+# The 20 Premier League clubs for the 2025-26 season (canonical names). Promoted: Burnley,
+# Leeds United, Sunderland. Relegated out: Ipswich, Leicester, Southampton (and earlier Luton,
+# Sheffield United). Only players at these clubs this season appear on the site.
+PL_CLUBS_2025_26: frozenset[str] = frozenset({
+    "Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton & Hove Albion",
+    "Burnley", "Chelsea", "Crystal Palace", "Everton", "Fulham", "Leeds United",
+    "Liverpool", "Manchester City", "Manchester United", "Newcastle United",
+    "Nottingham Forest", "Sunderland", "Tottenham Hotspur", "West Ham United",
+    "Wolverhampton Wanderers",
+})
+
+# Map the source clubs' name variants to one canonical name per club.
+_CLUB_CANON: dict[str, str] = {
+    "wolves": "Wolverhampton Wanderers", "wolverhampton": "Wolverhampton Wanderers",
+    "wolverhampton wanderers": "Wolverhampton Wanderers",
+    "west ham": "West Ham United", "west ham united": "West Ham United",
+    "brighton": "Brighton & Hove Albion", "brighton & hove al..": "Brighton & Hove Albion",
+    "brighton & hove albion": "Brighton & Hove Albion",
+    "leeds": "Leeds United", "leeds united": "Leeds United",
+    "tottenham": "Tottenham Hotspur", "tottenham hotspur": "Tottenham Hotspur",
+    "man city": "Manchester City", "manchester city": "Manchester City",
+    "man united": "Manchester United", "man utd": "Manchester United",
+    "manchester united": "Manchester United",
+    "newcastle": "Newcastle United", "newcastle united": "Newcastle United",
+    "nottingham forest": "Nottingham Forest", "nott'm forest": "Nottingham Forest",
+}
+
+
+def _canon_club(club: object) -> object:
+    """Collapse club-name variants to a single canonical name; pass through unknowns/None."""
+    if not club or not isinstance(club, str):
+        return club
+    return _CLUB_CANON.get(club.strip().lower(), club.strip())
 
 
 @dataclass(frozen=True)
@@ -35,7 +72,8 @@ class WebBundle:
     players_path: Path
     meta_path: Path
     mispricing_path: Path
-    bio_path: Path
+    detail_dir: Path
+    n_detail: int
 
 
 # -------- Phase 1 enrichment: bio, career, stats timeline, value trajectory --------
@@ -189,27 +227,28 @@ def _load_value_trajectory(tm_dir: Path, player_ids: set[int]) -> dict[int, list
 # -------- Verdict --------
 
 
-def _verdict(actual: float | None, predicted: float | None,
-             lower: float | None, upper: float | None) -> dict[str, Any] | None:
+def _verdict(actual: float | None, predicted: float | None) -> dict[str, Any] | None:
+    """Label how close the model's prediction is to the market, on |% error| alone.
+
+    Interval-free (the conformal intervals were dropped): bands are excellent <=20%,
+    good <=35%, fair <=50%, poor >50%.
+    """
     if actual is None or predicted is None:
         return None
     pct_err = (predicted - actual) / actual if actual else None
-    within_interval = bool(lower is not None and upper is not None
-                           and lower <= actual <= upper)
     abs_pct = abs(pct_err) if pct_err is not None else None
     if abs_pct is None:
         label = "unknown"
     elif abs_pct <= 0.20:
         label = "excellent"
-    elif within_interval and abs_pct <= 0.50:
+    elif abs_pct <= 0.35:
         label = "good"
-    elif within_interval:
+    elif abs_pct <= 0.50:
         label = "fair"
     else:
         label = "poor"
     return {
         "label": label,
-        "within_interval": within_interval,
         "within_20_pct": abs_pct is not None and abs_pct <= 0.20,
         "pct_err": None if pct_err is None else round(pct_err, 4),
     }
@@ -237,51 +276,6 @@ def _top_shap_rows(
         {"feature": feature_names[i], "contribution_log": float(row[i])}
         for i in order
     ]
-
-
-def _build_per_player_rows(
-    artifact: TrainedArtifact,
-    frame: pd.DataFrame,
-    predictions_df: pd.DataFrame,
-    target_label: str,
-) -> dict[int, dict[str, Any]]:
-    """Return a {row_key: per-target block} mapping, keyed by (player_id, season, snapshot).
-
-    Uses the predictions parquet (which already has calibrated intervals) as the source of
-    truth for pred/lower/upper, then layers SHAP on top.
-    """
-    feature_names = [*artifact.numeric_cols, *artifact.categorical_cols]
-    X_t = pd.DataFrame(
-        artifact.preprocessor.transform(_normalize_na(frame[feature_names])),
-        columns=feature_names,
-        index=frame.index,
-    )
-    explainer = shap.TreeExplainer(artifact.model)
-    shap_vals = np.asarray(explainer.shap_values(X_t))
-
-    # Join predictions back by (player_id, season) — snapshot column may not survive the eval path
-    # so we match on player_id + season, taking the end-of-season row where multiple snapshots exist.
-    pred_lookup = {
-        (int(r["player_id"]), r["season"]): r for _, r in predictions_df.iterrows()
-    }
-
-    out: dict[int, dict[str, Any]] = {}
-    for i, row in frame.reset_index(drop=True).iterrows():
-        key = (int(row["player_id"]), row["season"], row.get("snapshot", "end"))
-        pred_row = pred_lookup.get((int(row["player_id"]), row["season"]))
-        block: dict[str, Any] = {
-            "actual": float(row[target_label]) if pd.notna(row[target_label]) else None,
-            "shap_top": _top_shap_rows(shap_vals, feature_names, i, SHAP_TOP_K),
-        }
-        if pred_row is not None:
-            block["predicted"] = float(pred_row["pred"])
-            block["lower"] = float(pred_row["lower"]) if "lower" in pred_row else None
-            block["upper"] = float(pred_row["upper"]) if "upper" in pred_row else None
-            block["residual_pct"] = (
-                float(pred_row["residual_pct"]) if pd.notna(pred_row.get("residual_pct")) else None
-            )
-        out[hash(key)] = {"key": {"player_id": key[0], "season": key[1], "snapshot": key[2]}, "block": block}
-    return out
 
 
 def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBundle:
@@ -382,8 +376,7 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
         )
         if not pred_path.exists():
             raise FileNotFoundError(
-                f"{pred_path} missing. Run `vw evaluate run --target {target}` (and optionally "
-                f"`vw calibrate run --target {target}`) first."
+                f"{pred_path} missing. Run `vw evaluate run --target {target}` first."
             )
         predictions_df = pd.read_parquet(pred_path)
 
@@ -401,6 +394,7 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
             (int(r["player_id"]), r["season"]): r for _, r in predictions_df.iterrows()
         }
 
+        conf_rows: list[dict[str, Any]] = []  # feeds the area×tier confidence table
         for ridx, (_, r) in enumerate(split.test.reset_index(drop=True).iterrows()):
             key = (int(r["player_id"]), r["season"], r.get("snapshot", "end"))
             if key not in per_player:
@@ -412,20 +406,18 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
             }
             if pred_row is not None:
                 block["predicted"] = float(pred_row["pred"])
-                block["lower"] = (
-                    float(pred_row["lower"]) if "lower" in pred_row and pd.notna(pred_row["lower"]) else None
-                )
-                block["upper"] = (
-                    float(pred_row["upper"]) if "upper" in pred_row and pd.notna(pred_row["upper"]) else None
-                )
                 block["residual_pct"] = (
                     float(pred_row["residual_pct"]) if pd.notna(pred_row.get("residual_pct")) else None
                 )
-            block["verdict"] = _verdict(
-                block.get("actual"), block.get("predicted"),
-                block.get("lower"), block.get("upper"),
-            )
+            block["verdict"] = _verdict(block.get("actual"), block.get("predicted"))
             per_player[key][target] = block
+
+            if block.get("actual") and block.get("predicted") is not None:
+                conf_rows.append({
+                    "area": area_of(per_player[key].get("position")),
+                    "actual": block["actual"],
+                    "pred": block["predicted"],
+                })
 
         # Meta: global SHAP + metrics.
         importance = (
@@ -435,11 +427,24 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
             [{"feature": feature_names[i], "mean_abs_shap": float(importance[i])} for i in range(len(feature_names))],
             key=lambda d: -d["mean_abs_shap"],
         )[:15]
-        metrics_file = settings.paths.reports_dir / f"metrics_calibrated_{target}_{artifact.model_name}.json"
-        metrics = json.loads(metrics_file.read_text(encoding="utf-8")) if metrics_file.exists() else {}
+        # Metrics computed inline from the predictions (interval-free; no calibrated json).
+        a_log = predictions_df["actual_log"].to_numpy(dtype=float)
+        p_log = predictions_df["pred_log"].to_numpy(dtype=float)
+        a_eur = np.expm1(a_log)
+        p_eur = np.expm1(p_log)
+        denom = np.maximum(a_eur, 1.0)
+        metrics = {
+            "point_r2_log": round(float(r2_score(a_log, p_log)), 4),
+            "point_mae_log": round(float(np.mean(np.abs(a_log - p_log))), 4),
+            "point_spearman": round(float(spearmanr(a_log, p_log).correlation), 4),
+            "median_ape_pct": round(float(np.median(np.abs(p_eur - a_eur) / denom) * 100), 1),
+            "n_test": len(predictions_df),
+        }
+        confidence = build_confidence_table(pd.DataFrame(conf_rows), target) if conf_rows else None
         meta_blocks["targets"][target] = {
             "model": artifact.model_name,
             "metrics": metrics,
+            "confidence": confidence,
             "shap_global_top15": global_shap,
             "features": feature_names,
         }
@@ -457,26 +462,92 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
             "market_overpays": over.to_dict(orient="records"),
         }
 
-    players_payload = sorted(
+    rows = sorted(
         per_player.values(),
         key=lambda d: (d["player"], d["season"], d["snapshot"]),
     )
 
+    # Normalise club-name variants (the FM/TM sources mix "Wolves"/"Wolverhampton",
+    # "West Ham"/"West Ham United", a truncated "Brighton & Hove Al..", etc.) to one canonical
+    # name per club, so the Teams view doesn't split a club into duplicates.
+    for r in rows:
+        r["club"] = _canon_club(r.get("club"))
+
+    # Only players in the 2025-26 Premier League belong on the site: they must have a 2025-26
+    # row AND that row's club must be one of this season's 20 PL clubs. This drops players who
+    # left the league (no 2025-26 row) and players whose 2025-26 club is foreign or relegated
+    # (e.g. a transfer abroad that still carried a prediction row), which otherwise make the
+    # 2025-26 site look stale and clumsy.
+    prediction_season = settings.split.test_seasons[-1]
+    current_player_ids = {
+        r["player_id"] for r in rows
+        if r["season"] == prediction_season and r["club"] in PL_CLUBS_2025_26
+    }
+    rows = [r for r in rows if r["player_id"] in current_player_ids]
+
+    # ---- Split: a slim index (fast first load) + lazy per-player detail files. ----
+    # The heavy per-player arrays (value_trajectory / career / season_stats / full bio) are
+    # ~86% of the payload and were duplicated across every season/snapshot row of a player.
+    # Keep only list/table essentials in players.json; move the rest to data/player/<id>.json,
+    # fetched on demand when a profile or comparison opens.
+    BIO_SLIM = (
+        "image_url", "sub_position", "country_of_citizenship",
+        "contract_expiration_date", "tm_current_market_value_eur", "tm_highest_market_value_eur",
+    )
+
+    def _slim_target(block: dict[str, Any] | None) -> dict[str, Any] | None:
+        if not block:
+            return block
+        return {k: v for k, v in block.items() if k != "shap_top"}
+
+    slim_rows: list[dict[str, Any]] = []
+    detail: dict[int, dict[str, Any]] = {}
+    for r in rows:
+        bio = r.get("bio") or {}
+        slim_rows.append({
+            "player_id": r["player_id"], "player_tm_id": r["player_tm_id"],
+            "player": r["player"], "season": r["season"], "snapshot": r["snapshot"],
+            "club": r["club"], "position": r["position"], "age": r["age"], "minutes": r["minutes"],
+            "bio": {k: bio.get(k) for k in BIO_SLIM} if bio else None,
+            "value": _slim_target(r.get("value")),
+            "wage": _slim_target(r.get("wage")),
+        })
+        pid = r["player_id"]
+        if pid not in detail:
+            detail[pid] = {
+                "bio": r.get("bio"),
+                "career": r.get("career") or [],
+                "season_stats": r.get("season_stats") or [],
+                "value_trajectory": r.get("value_trajectory") or [],
+                "shap": {},
+            }
+        skey = f'{r["season"]}|{r["snapshot"]}'
+        shap_row = {}
+        for tgt in ("value", "wage"):
+            blk = r.get(tgt)
+            if blk and blk.get("shap_top"):
+                shap_row[tgt] = blk["shap_top"]
+        if shap_row:
+            detail[pid]["shap"][skey] = shap_row
+
     players_path = web_dir / "players.json"
     meta_path = web_dir / "meta.json"
     mispricing_path = web_dir / "mispricing.json"
-    bio_path = web_dir / "bio.json"
+    detail_dir = web_dir / "player"
+    detail_dir.mkdir(parents=True, exist_ok=True)
 
-    players_path.write_text(_dumps(players_payload), encoding="utf-8")
+    players_path.write_text(_dumps(slim_rows), encoding="utf-8")
     meta_path.write_text(_dumps(meta_blocks, indent=2), encoding="utf-8")
     mispricing_path.write_text(_dumps(mispricing), encoding="utf-8")
+    # Remove stale detail files from previous exports (e.g. players dropped from the roster).
+    keep = {f"{pid}.json" for pid in detail}
+    for f in detail_dir.glob("*.json"):
+        if f.name not in keep:
+            f.unlink()
+    for pid, d in detail.items():
+        (detail_dir / f"{pid}.json").write_text(_dumps(d), encoding="utf-8")
 
-    # Smaller companion payload: bio only, keyed by player_id. Lets a UI do a lighter first
-    # fetch and lazy-load the full stats/trajectory from players.json on demand.
-    bio_only = {str(k): v for k, v in bio_by_tm.items() if k in tm_player_ids}
-    bio_path.write_text(_dumps(bio_only), encoding="utf-8")
-
-    return WebBundle(players_path, meta_path, mispricing_path, bio_path)
+    return WebBundle(players_path, meta_path, mispricing_path, detail_dir, len(detail))
 
 
 def _json_safe(obj: Any) -> Any:
