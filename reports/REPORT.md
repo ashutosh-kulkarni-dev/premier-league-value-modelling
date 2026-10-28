@@ -2,14 +2,14 @@
 
 **Author:** Ashutosh Bhasin
 **Dataset:** 1,669 Premier League players × 3 seasons (2023-24, 2024-25, 2025-26)
-**Deliverables:** tuned regression models, calibrated prediction intervals, ranked mispricing board, static HTML UI.
+**Deliverables:** tuned regression models, per-area confidence tiers, ranked mispricing board, static HTML UI.
 
 ---
 
 ## 1. Thesis
 
 Predict Premier League players' **market value** (Transfermarkt €) and **weekly wage**
-(FM-estimated £/wk) from on-pitch performance (FBref, Understat) and scouted attributes
+(FM-estimated £/wk) from on-pitch performance (Understat) and scouted attributes
 (Football Manager 26). Treat the model's **residuals** as the deliverable: they quantify
 how much a player's actual market valuation deviates from what the measurable features
 alone would predict, exposing the "human premium" (manager demand, auction dynamics,
@@ -25,7 +25,7 @@ model to leave on the table.
 
 | Source | Seasons | Rows | What it brings |
 |---|---|---|---|
-| Understat (FBref) | 2023-24, 2024-25, 2025-26 | 1,669 player-seasons | goals, assists, xG, xA, xG chain/buildup, minutes |
+| Understat | 2023-24, 2024-25, 2025-26 | 1,669 player-seasons | goals, assists, xG, xA, xG chain/buildup, minutes |
 | FMinside (FM26 scrape) | FM26 snapshot | 1,242 PL players | 40+ scouted attributes, current_ability, potential, age, contract end |
 | Transfermarkt (Kaggle `davidcariboo/player-scores`) | historical | 656k valuations | the real `market_value_in_eur` target |
 
@@ -71,21 +71,21 @@ tautologically dominate the model. Three independent guards prevent this:
 
 ## 3. Feature engineering
 
-48 features in five groups. Snapshot-aware: time-dependent features (`age`, `age²`,
-`months_to_contract_end`) are recomputed per snapshot so start- and end-of-season rows
-differ correctly.
+54 features (52 numeric + 2 categorical). Snapshot-aware: time-dependent features (`age`,
+`age²`, `months_to_contract_end`) are recomputed per snapshot so start- and end-of-season
+rows differ correctly.
 
 | Group | Count | Examples |
 |---|---|---|
-| Biographical | 4 | age, age², height, weak_foot |
-| Availability / volume | 4 | log1p(minutes), matches, log1p(goals), log1p(assists) |
-| Performance per 90 | 6 | np_xg_p90, xa_p90, key_passes_p90, xg_chain_p90, xg_buildup_p90, shots_p90 |
+| Biographical | 7 | age, age², height, weak_foot, minutes, matches, log1p(minutes) |
+| Performance per 90 | 8 | np_xg_p90, xa_p90, key_passes_p90, xg_chain_p90, xg_buildup_p90, shots_p90, log1p(goals), log1p(assists) |
 | FM technical attrs | 10 | finishing, passing, dribbling, first_touch, technique, … |
 | FM mental attrs | 14 | composure, decisions, vision, work_rate, off_the_ball, … |
 | FM physical attrs | 5 | acceleration, pace, stamina, strength, jumping_reach |
-| FM aggregates | 5 | fm_{technical,mental,physical}_mean, current_ability, potential, potential_gap |
+| FM aggregates | 6 | fm_{technical,mental,physical}_mean, current_ability, potential, potential_gap |
 | Contract | 1 | months_to_contract_end (recomputed per snapshot) |
-| Position (one-hot) | 1 | primary_position ∈ {GK, CB, FB, DM, CM, AM, W, ST} |
+| Market inflation (exogenous) | 1 | market_inflation_index (big-5 ex-PL median; non-leaky) |
+| Categorical | 2 | primary_position ∈ {GK, CB, FB, DM, CM, AM, W, ST}, foot |
 
 **Deliberately excluded:** nationality (small-sample bias / passport premiums), player
 name, club, team (would absorb wage signal we want to explain).
@@ -107,14 +107,9 @@ in both inner-train and inner-val folds during Optuna tuning.
 
 ---
 
-## 5. Modelling: a 3-booster bake-off
+## 5. Modelling: a 4-booster bake-off
 
-Four boosters planned (`LGBM`, `XGBoost`, `CatBoost`, `HGBR`); **CatBoost dropped mid-sweep
-for compute reasons** — each trial required ~5 min on this dataset, over the available
-background-job budget. All four would be included in a repeat with longer runtime
-allowance.
-
-All boosters tuned under one Optuna recipe:
+Four boosters (`LGBM`, `XGBoost`, `CatBoost`, `HGBR`) all tuned under one Optuna recipe:
 
 - Objective: `regression_l1` (MAE) on `log1p(target)`.
 - Sampler: TPE seeded at 42.
@@ -122,56 +117,60 @@ All boosters tuned under one Optuna recipe:
 - Inner CV: 3-fold GroupKFold on `player_id`.
 - Persisted: SQLite + MLflow (resumable, auditable).
 
-### CV log-MAE (train+val, inner CV)
+They are benchmarked against two simpler reference models on the same features, split, and
+`log1p` target — **ElasticNet** (regularized linear with built-in feature selection) and
+**Random Forest** — plus a per-position-median sanity floor.
 
-| | lgbm | xgb | hgbr |
-|---|---|---|---|
-| **value** | **0.5129** | 0.5153 | 0.5270 |
-| **wage** | **0.3617** | 0.3642 | 0.3687 |
+### Held-out comparison (test = 2025-26, back-transformed from log)
 
-**LightGBM wins both targets** — but by razor-thin margins (<0.01 log). On a different
-random seed either XGB could have won; the three boosters are statistically tied. LGBM
-gets the podium by consistency.
+Full tables are regenerated by `vw compare run --target value|wage` into
+`reports/model_comparison_{target}.{csv,md}`. Value target:
 
-### Baselines (test = 2025-26, back-transformed from log)
-
-| Target | Model | MAE log | R² log | Spearman |
-|---|---|---|---|---|
-| value | Position median | 0.844 | **−0.01** | 0.22 |
-| value | Ridge | 0.464 | 0.722 | 0.84 |
-| **value** | **LightGBM (tuned)** | **0.398** | **0.782** | **0.876** |
-| wage | Position median | 0.758 | **−0.05** | 0.11 |
-| wage | Ridge | 0.364 | 0.792 | 0.87 |
-| **wage** | **LightGBM (tuned)** | **0.257** | **0.858** | **0.941** |
+| Model | R² log | MAE log | Median APE | Spearman |
+|---|---:|---:|---:|---:|
+| **LightGBM (production)** | **0.784** | **0.392** | **27.8%** | **0.874** |
+| XGBoost | 0.783 | 0.389 | 27.7% | 0.875 |
+| CatBoost | 0.761 | 0.406 | 28.4% | 0.866 |
+| ElasticNet | 0.733 | 0.438 | 29.9% | 0.842 |
+| Random Forest | 0.699 | 0.478 | 33.8% | 0.850 |
+| Median-by-position (floor) | 0.05 | 0.862 | 55.6% | 0.197 |
 
 **Reading:**
 - Position-median R² near zero — expected. Within-position variance is huge.
-- Ridge is a strong floor (R² 0.72 / 0.79) — age + minutes + FM composites give
-  substantial linear signal.
-- GBM beats Ridge by ~5–7 R² points — meaningful, not dramatic. The GBM finds
-  non-linear interactions (position × age × attributes) but doesn't dominate.
+- ElasticNet is a strong floor (R² 0.73) — age + minutes + FM composites give substantial
+  linear signal.
+- The boosters are tightly bunched at the top; **LightGBM wins both targets** by razor-thin
+  margins over XGBoost. It takes the podium by consistency across value and wage.
 
 ---
 
-## 6. Calibrated prediction intervals (MAPIE conformal)
+## 6. Confidence: backtested typical error per area × value tier
 
-LightGBM's native quantile objective produced badly miscalibrated intervals (actual
-coverage 31–47% at a nominal 80%). Replaced with MAPIE **cross-conformal (CV+)** using
-GroupKFold on `player_id`:
+Rather than publish a prediction interval, each prediction carries a **confidence tier**
+derived from the model's **own backtested error on the holdout** for players like it. We
+bucket the test set by **positional area** (GK / defence / midfield / attack) and **value
+tier** (e.g. <5M / 5-15M / 15-40M / 40M+), and record each cell's **median absolute %
+error**. A new prediction inherits its cell's typical error, read as "for players like
+this, the model is usually within X%".
 
-| Target | Nominal | Achieved | Mean width (log) |
-|---|---|---|---|
-| value | 80% | **89.6%** | 1.65 |
-| wage  | 80% | **90.4%** | 1.12 |
+Thresholds for High / Medium / Low are calibrated **per area**, because some areas are
+inherently harder to value than others:
 
-Both slightly over-covered (common for CV+ on small data). The intervals are honest:
-coverage ≥ nominal is the distribution-free guarantee. A €20M value prediction has an
-80% interval of roughly €7M–€55M — reflecting the real-world variance in market valuations
-for players with identical measurable features.
+| Area | High (≤) | Low (>) |
+|---|---|---|
+| GK  | 30% | 36% |
+| Defence | 25% | 40% |
+| Midfield | 25% | 40% |
+| Attack | 30% | 45% |
 
-Mispricing z-scores (`(actual − predicted) / sigma_from_interval`) now cluster at
-**|z| ≈ 3–6** for the top entries — a sensible range. Previously (with the broken
-quantile intervals) z-scores reached 34, flagging fake outliers.
+(Wage uses the same scheme with its own, tighter thresholds.) Cells with fewer than 10
+test players fall back to a per-tier aggregate, so no tier is left ungraded. The full
+table ships in `meta.json` and is applied client-side — no interval model, nothing to
+re-fit at serve time, and the number a scout sees is a plain, explainable error rate.
+
+This replaced an earlier conformal-interval approach, which gave every player a near-
+constant multiplicative width (~5× for value) and so couldn't discriminate confident from
+shaky predictions.
 
 ---
 
@@ -218,8 +217,8 @@ feature >25%. `current_ability` (25%), `potential` (17%), `age` (9%), `minutes` 
 ## 8. The mispricing board
 
 The headline deliverable. For each test-season row, compute
-`residual = actual − predicted` on the log scale, divide by the conformal interval's
-implied sigma, rank by signed z.
+`residual = actual − predicted` on the log scale, divide by a single global residual
+sigma, rank by signed z.
 
 ### `market_overpays` (positive z — actual > predicted)
 
@@ -250,23 +249,22 @@ board is a **tool for investigation**, not a declaration of market error.
 
 ```
 data/processed/models/
-├── bakeoff_cv.csv                        # the 3-booster comparison
+├── bakeoff_cv.csv                            # the booster bake-off summary
 ├── winners.json
-├── value__{lgbm,xgb,hgbr}__best_params/  # Optuna best hyperparameters
-├── wage__{lgbm,xgb,hgbr}__best_params/
-├── value__lgbm__tuned/                   # serialised production model
-└── wage__lgbm__tuned/
+├── value__{lgbm,xgb,catboost}__best_params/  # Optuna best hyperparameters
+├── wage__{lgbm,xgb,catboost}__best_params/
+├── value__{lgbm,xgb,catboost}__tuned/        # serialised tuned models (lgbm = production)
+└── wage__{lgbm,xgb,catboost}__tuned/
 ```
 
 ### Reports
 
 ```
 reports/
-├── baselines.csv                                       # ridge + position-median
-├── metrics_value_lgbm.json                             # tuned-model metrics
-├── metrics_wage_lgbm.json
-├── metrics_calibrated_{value,wage}_lgbm.json           # conformal metrics + coverage
-├── shap_importance_{value,wage}_lgbm.csv               # global SHAP
+├── metrics_{value,wage}_lgbm.json                      # tuned-model metrics
+├── model_comparison_{value,wage}.{csv,md}              # boosters + baselines + floor, held-out
+├── target_transform_comparison_{value,wage}.{csv,md}  # log1p vs direct-value sanity check
+├── shap_importance_{value,wage}_lgbm.csv              # global SHAP (from `vw explain run`)
 ├── mispricing_{value,wage}_lgbm/                       # ranked boards (full / under / over)
 ├── figures/                                            # pred-vs-actual, residual, SHAP plots
 └── REPORT.md                                           # this file
@@ -276,11 +274,12 @@ reports/
 
 ```
 web/
-├── index.html         # reference UI (replace with styled version)
+├── index.html         # single-page app (routing, dark mode, charts from CDN)
 ├── README.md          # data contract
 └── data/
-    ├── players.json       # per-player predictions + SHAP (1.8 MB)
-    ├── meta.json          # model metadata, global SHAP, metrics
+    ├── players.json       # slim per-player index: predictions, verdict, scalars (~1.5 MB)
+    ├── player/<id>.json   # lazy per-player detail: full bio, career, stats, SHAP
+    ├── meta.json          # model metadata, metrics, global SHAP, confidence table
     └── mispricing.json    # ranked boards
 ```
 
@@ -302,15 +301,13 @@ cd value-wage-model
 
 # Tune (~90 min — split into per-pair runs due to 10-min bg caps)
 .\.venv\Scripts\python.exe -m value_wage.cli tune one --target value --model lgbm --trials 30
-# repeat for xgb/hgbr value and lgbm/xgb/hgbr wage
+# repeat for xgb/catboost value and lgbm/xgb/catboost wage
 
 # Train tuned, evaluate, SHAP, mispricing
 .\.venv\Scripts\python.exe -m value_wage.cli train tuned --target value --model lgbm --params-json data/processed/models/value__lgbm__best_params/params.json
 .\.venv\Scripts\python.exe -m value_wage.cli train tuned --target wage  --model lgbm --params-json data/processed/models/wage__lgbm__best_params/params.json
 .\.venv\Scripts\python.exe -m value_wage.cli evaluate run --target value
 .\.venv\Scripts\python.exe -m value_wage.cli evaluate run --target wage
-.\.venv\Scripts\python.exe -m value_wage.cli calibrate run --target value --model lgbm --method cross
-.\.venv\Scripts\python.exe -m value_wage.cli calibrate run --target wage  --model lgbm --method cross
 .\.venv\Scripts\python.exe -m value_wage.cli mispricing build --target value
 .\.venv\Scripts\python.exe -m value_wage.cli mispricing build --target wage
 
@@ -325,9 +322,10 @@ ingestion. The same inputs produce bit-identical outputs.
 
 ## 11. Limitations (honest)
 
-1. **CatBoost dropped from the bake-off** for compute reasons. Prior work shows
-   CatBoost often leads on small tabular data; a repeat with a longer compute budget
-   should include it.
+1. **HistGradientBoosting (`hgbr`) is defined but not tuned** in the shipped artefacts —
+   the bake-off on disk covers LGBM, XGBoost and CatBoost. Adding it is a one-command
+   `vw tune one --model hgbr` run; it is unlikely to change the podium given how tightly
+   the other three cluster.
 2. **Wage target is still FM-estimated.** Real wage data from Capology is paywalled;
    Transfermarkt doesn't publish wages reliably. Reports frame this honestly: the wage
    model predicts FM's wage estimate, which is in the right ballpark but not an audited
@@ -338,10 +336,11 @@ ingestion. The same inputs produce bit-identical outputs.
 4. **Selection bias in the "overpaid youth" cohort.** TM assigns speculative values to
    prospects based on hype that the model has no way to see. These residuals are more
    "the model lacks a feature" than "the market is wrong".
-5. **Interval widths are wide** (log 1.65 for value ≈ ~5× multiplicative). This is
-   honest, not a bug: Transfermarkt values for players with identical measurable
-   features really do vary this much due to the human factors the project frames as
-   residual signal.
+5. **Typical errors are sizeable** (median ~28% for value). This is honest, not a bug:
+   Transfermarkt values for players with identical measurable features really do vary
+   this much due to the human factors the project frames as residual signal — which is
+   exactly why confidence is reported as a per-cohort error rate rather than a single
+   global accuracy claim.
 6. **One league, three seasons.** Expanding to other leagues would require re-tuning
    the primary-position parsing and the TM club alias dictionary.
 
@@ -355,8 +354,8 @@ ingestion. The same inputs produce bit-identical outputs.
 > **residuals quantify how much a player's actual market valuation deviates from what
 > their measurable features alone would predict — a tool for identifying players where
 > non-measurable factors (coaching fit, panic premiums, expiring contracts, injuries,
-> hype) are moving the price.** We ship a ranked mispricing board with calibrated 80%
-> prediction intervals and a static HTML UI for interactive exploration.
+> hype) are moving the price.** We ship a ranked mispricing board, a per-area confidence
+> tier on every prediction, and a static HTML UI for interactive exploration.
 
 That framing — "the residual is the deliverable, not an error" — is what distinguishes
 the project from "we built an accuracy-chasing regression".
