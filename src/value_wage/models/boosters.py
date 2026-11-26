@@ -90,6 +90,7 @@ def _catboost_defaults(**overrides: Any) -> dict[str, Any]:
 
 def build_catboost(**params: Any) -> Any:
     from catboost import CatBoostRegressor
+
     return CatBoostRegressor(**_catboost_defaults(**params))
 
 

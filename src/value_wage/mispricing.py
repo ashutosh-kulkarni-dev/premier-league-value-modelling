@@ -50,7 +50,9 @@ def build_board(
     # "overvalued" = market pays MORE than model (actual > pred), z > 0.
     undervalued = df_sorted.head(top_n).reset_index(drop=True)
     overvalued = df_sorted.tail(top_n).iloc[::-1].reset_index(drop=True)
-    return MispricingBoard(full=df_sorted.reset_index(drop=True), undervalued=undervalued, overvalued=overvalued)
+    return MispricingBoard(
+        full=df_sorted.reset_index(drop=True), undervalued=undervalued, overvalued=overvalued
+    )
 
 
 def nearest_comparables(

@@ -30,7 +30,7 @@ import unicodedata
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 
 import numpy as np
 import pandas as pd
@@ -112,16 +112,29 @@ _NAME_DIMINUTIVES: Final[dict[str, str]] = {
 # the name join for every Nordic/Slavic/Turkish name. Combining diacritics (é, ñ, å, ü, š, ç)
 # are handled correctly by NFKD and need no entry here.
 _TRANSLIT: Final[dict[str, str]] = {
-    "ø": "o", "Ø": "o",
-    "æ": "ae", "Æ": "ae",
-    "œ": "oe", "Œ": "oe",
+    "ø": "o",
+    "Ø": "o",
+    "æ": "ae",
+    "Æ": "ae",
+    "œ": "oe",
+    "Œ": "oe",
     "ß": "ss",
-    "đ": "d", "Đ": "d", "ð": "d", "Ð": "d",
-    "þ": "th", "Þ": "th",
-    "ł": "l", "Ł": "l",
-    "ı": "i", "İ": "i", "ĳ": "ij", "Ĳ": "ij",
-    "ħ": "h", "Ħ": "h",
-    "ŋ": "ng", "Ŋ": "ng",
+    "đ": "d",
+    "Đ": "d",
+    "ð": "d",
+    "Ð": "d",
+    "þ": "th",
+    "Þ": "th",
+    "ł": "l",
+    "Ł": "l",
+    "ı": "i",
+    "İ": "i",
+    "ĳ": "ij",
+    "Ĳ": "ij",
+    "ħ": "h",
+    "Ħ": "h",
+    "ŋ": "ng",
+    "Ŋ": "ng",
     "ĸ": "k",
 }
 _TRANSLIT_TABLE: Final[dict[int, str]] = {ord(k): v for k, v in _TRANSLIT.items()}
@@ -330,8 +343,8 @@ def build_snapshot_frame(
     out["player_tm_name_norm"] = out["player_tm_name"].map(_normalise_name)
     out["player_tm_tokens"] = out["player_tm_name_norm"].map(_name_tokens)
     out["age_at_snapshot"] = (
-        (pd.to_datetime(out["snapshot_date"]) - out["player_dob"]).dt.days / 365.25
-    )
+        pd.to_datetime(out["snapshot_date"]) - out["player_dob"]
+    ).dt.days / 365.25
     return out
 
 
@@ -383,8 +396,7 @@ def join_master_to_tm(
     snap_by_name = s.set_index(["player_tm_name_norm", "season", "snapshot"]).sort_index()
     # For pass 4: snapshots grouped by (season, snapshot) for token-subset search.
     snaps_by_cohort = {
-        (season, snap): grp
-        for (season, snap), grp in s.groupby(["season", "snapshot"])
+        (season, snap): grp for (season, snap), grp in s.groupby(["season", "snapshot"])
     }
 
     def _subset_match(master_tokens: frozenset[str], cohort: pd.DataFrame) -> pd.DataFrame:
@@ -428,8 +440,10 @@ def join_master_to_tm(
 
         # Pass 2: name match + master's club ∈ TM's known clubs for this player this season.
         if matched is None and len(candidates):
-            def clubs_for_tm_id(tm_id: int, season=season) -> set[str]:
+
+            def clubs_for_tm_id(tm_id: int, season: Any = season) -> set[str]:
                 return clubs_lookup.get((int(tm_id), season), set())
+
             row_alias = row["club_alias"]
             p2 = candidates[
                 candidates.apply(
@@ -446,7 +460,9 @@ def join_master_to_tm(
             cand_row = candidates.iloc[0]
             master_age = float(row["age"]) if pd.notna(row["age"]) else np.nan
             tm_age = (
-                float(cand_row["age_at_snapshot"]) if pd.notna(cand_row["age_at_snapshot"]) else np.nan
+                float(cand_row["age_at_snapshot"])
+                if pd.notna(cand_row["age_at_snapshot"])
+                else np.nan
             )
             if np.isnan(master_age) or np.isnan(tm_age) or abs(master_age - tm_age) <= 1.0:
                 matched = cand_row
@@ -478,10 +494,7 @@ def join_master_to_tm(
         # Bayindir, Reid, Grønbæk, Irving, ...) without re-opening Osho/Neto/Thiago.
         if matched is None:
             toks_list = (name_norm or "").split()
-            distinctive = (
-                len(toks_list) >= 2
-                and any(len(t) >= 3 for t in toks_list)
-            )
+            distinctive = len(toks_list) >= 2 and any(len(t) >= 3 for t in toks_list)
             cohort = snaps_by_cohort.get((season, snap))
             if distinctive and cohort is not None:
                 exact_name = cohort[cohort["player_tm_name_norm"] == name_norm]
@@ -491,12 +504,16 @@ def join_master_to_tm(
                 if len(p5) == 0 and row_alias:
                     # Fallback: last-token match + exact club alias
                     master_last = toks_list[-1]
-                    def _nm_club(cand_row, _ml=master_last, _ra=row_alias) -> bool:
+
+                    def _nm_club(
+                        cand_row: pd.Series, _ml: str = master_last, _ra: str = row_alias
+                    ) -> bool:
                         tm_name = cand_row["player_tm_name_norm"] or ""
                         tm_toks = tm_name.split()
                         if not tm_toks or tm_toks[-1] != _ml:
                             return False
-                        return (cand_row.get("current_club_alias") or "") == _ra
+                        return bool((cand_row.get("current_club_alias") or "") == _ra)
+
                     p5 = cohort[cohort.apply(_nm_club, axis=1)]
                 # Enforce uniqueness: drop candidates already consumed
                 if len(p5):

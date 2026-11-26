@@ -34,7 +34,9 @@ def test_make_splits_season_partition() -> None:
 
 
 def test_make_splits_rejects_overlap() -> None:
-    cfg = SplitConfig(train_seasons=("2023-24",), val_seasons=("2023-24",), test_seasons=("2025-26",))
+    cfg = SplitConfig(
+        train_seasons=("2023-24",), val_seasons=("2023-24",), test_seasons=("2025-26",)
+    )
     with pytest.raises(ValueError, match="overlap"):
         make_splits(_mini_frame(), "value", cfg=cfg)
 

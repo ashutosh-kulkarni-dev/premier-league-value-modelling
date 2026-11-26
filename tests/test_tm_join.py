@@ -32,11 +32,11 @@ ODEGAARD_TM_ID = 316264
 @pytest.mark.parametrize(
     ("raw", "expected"),
     [
-        ("Martin Ødegaard", "martin odegaard"),   # Ø must fold to o, not vanish
+        ("Martin Ødegaard", "martin odegaard"),  # Ø must fold to o, not vanish
         ("Albert Grønbæk", "albert gronbaek"),  # ø + æ
         ("Rasmus Højlund", "rasmus hojlund"),
         ("Wojciech Szczęsny", "wojciech szczesny"),  # ę is NFKD-decomposable
-        ("Matıas", "matias"),                      # dotless ı
+        ("Matıas", "matias"),  # dotless ı
         ("Pervis Estupiñán", "pervis estupinan"),  # combining diacritics still fine
     ],
 )

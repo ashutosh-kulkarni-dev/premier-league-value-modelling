@@ -11,6 +11,7 @@ Shared across all four boosters:
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -40,7 +41,7 @@ class TuningResult:
     study_name: str
 
 
-SEARCH_SPACES: dict[Model, callable] = {}  # type: ignore[type-arg]
+SEARCH_SPACES: dict[Model, Callable[[optuna.Trial], dict[str, Any]]] = {}
 
 
 def _suggest_lgbm(trial: optuna.Trial) -> dict[str, Any]:

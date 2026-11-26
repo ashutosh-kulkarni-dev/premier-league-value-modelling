@@ -85,6 +85,7 @@ def _guard(fn):  # type: ignore[no-untyped-def]
 
     Uses `functools.wraps` so Typer can introspect the original signature.
     """
+
     @functools.wraps(fn)
     def wrapper(*args, **kwargs):  # type: ignore[no-untyped-def]
         try:
@@ -95,10 +96,12 @@ def _guard(fn):  # type: ignore[no-untyped-def]
             console.print(f"[bold red]ERROR[/bold red]: {exc}")
             traceback.print_exc()
             raise typer.Exit(code=1) from exc
+
     return wrapper
 
 
 # ---------------- data ----------------
+
 
 @data_app.command("build")
 @_guard
@@ -126,6 +129,7 @@ def data_build(skip_tm: bool = typer.Option(False, help="Skip the TM join (debug
 
 
 # ---------------- features ----------------
+
 
 def _features_df() -> pd.DataFrame:
     """Prefer the TM-expanded master (snapshot-aware, TM target) when present; else FM-only."""
@@ -159,6 +163,7 @@ def _load_features_or_build() -> pd.DataFrame:
 
 
 # ---------------- train ----------------
+
 
 @train_app.command("quick")
 @_guard
@@ -198,7 +203,9 @@ def train_baseline_cmd(
 def train_tuned(
     target: Target = typer.Option("value"),
     model: Model = typer.Option("lgbm"),
-    params_json: Path = typer.Option(..., help="JSON file of hyperparameters (from `vw tune one`)."),
+    params_json: Path = typer.Option(
+        ..., help="JSON file of hyperparameters (from `vw tune one`)."
+    ),
 ) -> None:
     """Fit using params from a previous Optuna run."""
     settings = get_settings()
@@ -211,6 +218,7 @@ def train_tuned(
 
 
 # ---------------- tune ----------------
+
 
 @tune_app.command("one")
 @_guard
@@ -249,7 +257,9 @@ def tune_all(trials: int = typer.Option(50)) -> None:
             r = tune(mdl, tgt, features, n_trials=trials, settings=settings)
             out_dir = settings.paths.models_dir / f"{tgt}__{mdl}__best_params"
             out_dir.mkdir(parents=True, exist_ok=True)
-            (out_dir / "params.json").write_text(json.dumps(r.best_params, indent=2), encoding="utf-8")
+            (out_dir / "params.json").write_text(
+                json.dumps(r.best_params, indent=2), encoding="utf-8"
+            )
             results.append({"target": tgt, "model": mdl, "cv_log_mae": r.best_value})
 
     # Select winner per target by the pre-declared rule (lowest CV log-MAE).
@@ -270,6 +280,7 @@ def tune_all(trials: int = typer.Option(50)) -> None:
 
 
 # ---------------- evaluate ----------------
+
 
 def _winner_artifact_dir(target: Target) -> Path | None:
     settings = get_settings()
@@ -364,6 +375,7 @@ def evaluate_run(
 
 # ---------------- explain ----------------
 
+
 @explain_app.command("run")
 @_guard
 def explain_run(
@@ -384,7 +396,9 @@ def explain_run(
     )
     result = explain_tree_model(artifact.model, X_test)
     importance = result.global_importance()
-    importance_path = settings.paths.reports_dir / f"shap_importance_{target}_{artifact.model_name}.csv"
+    importance_path = (
+        settings.paths.reports_dir / f"shap_importance_{target}_{artifact.model_name}.csv"
+    )
     importance.to_csv(importance_path, index=False)
     save_global_summary_plot(
         result,
@@ -402,10 +416,13 @@ def explain_run(
             / f"shap_waterfall_{target}_{artifact.model_name}_{rank:02d}.png",
         )
     console.print(f"[green]OK[/green] SHAP importance -> {importance_path}")
-    console.print(f"[green]OK[/green] {top_waterfalls} waterfall plots -> {settings.paths.figures_dir}")
+    console.print(
+        f"[green]OK[/green] {top_waterfalls} waterfall plots -> {settings.paths.figures_dir}"
+    )
 
 
 # ---------------- mispricing ----------------
+
 
 @misp_app.command("build")
 @_guard
@@ -417,9 +434,7 @@ def mispricing_build(
     settings = get_settings()
     art_dir = _resolve_artifact_dir(target, model)
     artifact = TrainedArtifact.from_dir(art_dir)
-    pred_file = (
-        settings.paths.processed_dir / f"predictions_{target}_{artifact.model_name}.parquet"
-    )
+    pred_file = settings.paths.processed_dir / f"predictions_{target}_{artifact.model_name}.parquet"
     if not pred_file.exists():
         raise FileNotFoundError(
             f"Expected {pred_file}. Run `vw evaluate run --target {target}` first."
@@ -435,6 +450,7 @@ def mispricing_build(
 
 # ---------------- export ----------------
 
+
 @export_app.command("web")
 @_guard
 def export_web(model_name: str = typer.Option("lgbm", help="Which tuned model to export.")) -> None:
@@ -444,10 +460,13 @@ def export_web(model_name: str = typer.Option("lgbm", help="Which tuned model to
     console.print(f"[green]OK[/green] players    -> {bundle.players_path}")
     console.print(f"[green]OK[/green] meta       -> {bundle.meta_path}")
     console.print(f"[green]OK[/green] mispricing -> {bundle.mispricing_path}")
-    console.print(f"[green]OK[/green] detail     -> {bundle.detail_dir} ({bundle.n_detail} players)")
+    console.print(
+        f"[green]OK[/green] detail     -> {bundle.detail_dir} ({bundle.n_detail} players)"
+    )
 
 
 # ---------------- compare ----------------
+
 
 @compare_app.command("run")
 @_guard

@@ -41,10 +41,21 @@ TM_SUBPOS_TO_BUCKET: Final[dict[str, str]] = {
 # Short-code (used by TM search pages, surfaced by the scraper).
 TM_SHORT_TO_BUCKET: Final[dict[str, str]] = {
     "GK": "GK",
-    "CB": "CB", "LB": "FB", "RB": "FB", "LWB": "FB", "RWB": "FB",
-    "DM": "DM", "CM": "CM", "AM": "AM",
-    "LW": "W", "RW": "W", "LM": "W", "RM": "W",
-    "CF": "ST", "ST": "ST", "SS": "ST",
+    "CB": "CB",
+    "LB": "FB",
+    "RB": "FB",
+    "LWB": "FB",
+    "RWB": "FB",
+    "DM": "DM",
+    "CM": "CM",
+    "AM": "AM",
+    "LW": "W",
+    "RW": "W",
+    "LM": "W",
+    "RM": "W",
+    "CF": "ST",
+    "ST": "ST",
+    "SS": "ST",
 }
 
 # Default location of the scraper CSV (fallback). Override via settings.paths.scratchpad or the
@@ -60,11 +71,35 @@ _DEFAULT_SCRAPED_POSITIONS = Path(
 # Baked-in Latin-extended letters NFKD does not decompose to ASCII; without this they are
 # silently deleted by `encode("ascii", "ignore")` ('Ødegaard' → 'degaard'). Mirrors the table
 # in sources/transfermarkt_kaggle.py so both sides of the name join normalise identically.
-_TRANSLIT_TABLE: Final[dict[int, str]] = {ord(k): v for k, v in {
-    "ø": "o", "Ø": "o", "æ": "ae", "Æ": "ae", "œ": "oe", "Œ": "oe", "ß": "ss",
-    "đ": "d", "Đ": "d", "ð": "d", "Ð": "d", "þ": "th", "Þ": "th", "ł": "l", "Ł": "l",
-    "ı": "i", "İ": "i", "ĳ": "ij", "Ĳ": "ij", "ħ": "h", "Ħ": "h", "ŋ": "ng", "Ŋ": "ng", "ĸ": "k",
-}.items()}
+_TRANSLIT_TABLE: Final[dict[int, str]] = {
+    ord(k): v
+    for k, v in {
+        "ø": "o",
+        "Ø": "o",
+        "æ": "ae",
+        "Æ": "ae",
+        "œ": "oe",
+        "Œ": "oe",
+        "ß": "ss",
+        "đ": "d",
+        "Đ": "d",
+        "ð": "d",
+        "Ð": "d",
+        "þ": "th",
+        "Þ": "th",
+        "ł": "l",
+        "Ł": "l",
+        "ı": "i",
+        "İ": "i",
+        "ĳ": "ij",
+        "Ĳ": "ij",
+        "ħ": "h",
+        "Ħ": "h",
+        "ŋ": "ng",
+        "Ŋ": "ng",
+        "ĸ": "k",
+    }.items()
+}
 
 
 def _normalise_name(s: object) -> str:
@@ -93,15 +128,13 @@ def primary_position_from_tm(
     tm = pd.read_csv(tm_players_csv, low_memory=False, usecols=["player_id", "sub_position"])
     tm = tm.dropna(subset=["player_id"]).drop_duplicates(subset=["player_id"])
     tm["bucket"] = tm["sub_position"].map(TM_SUBPOS_TO_BUCKET)
-    lookup = dict(
-        zip(tm["player_id"].astype("Int64").astype(str), tm["bucket"], strict=False)
-    )
+    lookup = dict(zip(tm["player_id"].astype("Int64").astype(str), tm["bucket"], strict=False))
 
     def classify(x: object) -> str | None:
         if x is None or (isinstance(x, float) and np.isnan(x)):
             return None
         try:
-            key = str(int(float(x)))
+            key = str(int(float(x)))  # type: ignore[arg-type]  # TypeError handled below
         except (TypeError, ValueError):
             return None
         v = lookup.get(key)
@@ -146,7 +179,7 @@ def apply_scraper_fallback(
     sub["_name_norm"] = sub["player"].map(_normalise_name)
     sub["_club_tok"] = sub["team"].map(_club_token)
 
-    def pick(row) -> str | None:
+    def pick(row: pd.Series) -> str | None:
         hits = by_name.get(row["_name_norm"])
         if not hits:
             return None
@@ -162,28 +195,54 @@ def apply_scraper_fallback(
                 best = bucket
         return best
 
-    filled = sub.apply(pick, axis=1)
+    filled = sub.apply(pick, axis=1)  # type: ignore[call-overload]  # stubs reject Optional return
     out.loc[mask, "primary_position"] = filled.values
     out["primary_position"] = out["primary_position"].astype("string")
     return out
 
 
 FM_TECHNICAL: Final[tuple[str, ...]] = (
-    "crossing", "dribbling", "finishing", "first_touch", "heading", "long_shots",
-    "marking", "passing", "tackling", "technique",
+    "crossing",
+    "dribbling",
+    "finishing",
+    "first_touch",
+    "heading",
+    "long_shots",
+    "marking",
+    "passing",
+    "tackling",
+    "technique",
 )
 FM_MENTAL: Final[tuple[str, ...]] = (
-    "aggression", "anticipation", "bravery", "composure", "concentration",
-    "decisions", "determination", "flair", "leadership", "off_the_ball",
-    "positioning", "teamwork", "vision", "work_rate",
+    "aggression",
+    "anticipation",
+    "bravery",
+    "composure",
+    "concentration",
+    "decisions",
+    "determination",
+    "flair",
+    "leadership",
+    "off_the_ball",
+    "positioning",
+    "teamwork",
+    "vision",
+    "work_rate",
 )
 FM_PHYSICAL: Final[tuple[str, ...]] = (
-    "acceleration", "pace", "stamina", "strength", "jumping_reach",
+    "acceleration",
+    "pace",
+    "stamina",
+    "strength",
+    "jumping_reach",
 )
 
 
-def months_to_contract_end(contract_until: pd.Series, *, reference: datetime | None = None) -> pd.Series:
+def months_to_contract_end(
+    contract_until: pd.Series, *, reference: datetime | None = None
+) -> pd.Series:
     reference = reference or datetime(2025, 7, 1)
+
     def parse(x: object) -> float:
         if x is None or (isinstance(x, float) and np.isnan(x)):
             return float("nan")
@@ -200,6 +259,7 @@ def months_to_contract_end(contract_until: pd.Series, *, reference: datetime | N
             return float("nan")
         delta_days = (dt - reference).days
         return max(0.0, delta_days / 30.4375)
+
     return contract_until.map(parse).astype(float)
 
 
@@ -211,15 +271,22 @@ def per_90(numerator: pd.Series, minutes: pd.Series, *, min_minutes: int = 90) -
 
 def encode_foot(foot: pd.Series) -> pd.Series:
     mapping = {
-        "right": "right", "r": "right", "right only": "right",
-        "left": "left", "l": "left", "left only": "left",
-        "either": "either", "both": "either",
+        "right": "right",
+        "r": "right",
+        "right only": "right",
+        "left": "left",
+        "l": "left",
+        "left only": "left",
+        "either": "either",
+        "both": "either",
     }
+
     def classify(x: object) -> str | None:
         if x is None or (isinstance(x, float) and np.isnan(x)):
             return None
         key = str(x).strip().lower()
         return mapping.get(key)
+
     return foot.map(classify).astype("string")
 
 
@@ -286,18 +353,25 @@ def build_feature_matrix(
     required = features.all_features()
     missing = [c for c in required if c not in df.columns]
     if missing:
-        raise KeyError(
-            f"Feature matrix is missing allowlisted columns {missing}."
-        )
+        raise KeyError(f"Feature matrix is missing allowlisted columns {missing}.")
 
     base_keep = [
-        "player", "player_id", "season", "club", "team", "position", "positions",
-        "snapshot", "snapshot_date", "actual_valuation_date",
-        "market_value_eur", "wage_pw", "player_tm_id",
+        "player",
+        "player_id",
+        "season",
+        "club",
+        "team",
+        "position",
+        "positions",
+        "snapshot",
+        "snapshot_date",
+        "actual_valuation_date",
+        "market_value_eur",
+        "wage_pw",
+        "player_tm_id",
     ]
     keep = [c for c in base_keep if c in df.columns] + required
-    seen: set[str] = set()
-    out_cols = [c for c in keep if not (c in seen or seen.add(c))]
+    out_cols = list(dict.fromkeys(keep))  # de-dupe, order-preserving
     return df.loc[:, out_cols].copy()
 
 

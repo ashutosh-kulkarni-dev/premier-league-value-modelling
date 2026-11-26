@@ -26,9 +26,13 @@ import pandas as pd
 # The 8 sub-position buckets collapse into 4 scouting areas.
 AREA_OF_POSITION: dict[str, str] = {
     "GK": "GK",
-    "CB": "DEF", "FB": "DEF",
-    "DM": "MID", "CM": "MID", "AM": "MID",
-    "W": "ATT", "ST": "ATT",
+    "CB": "DEF",
+    "FB": "DEF",
+    "DM": "MID",
+    "CM": "MID",
+    "AM": "MID",
+    "W": "ATT",
+    "ST": "ATT",
 }
 AREAS: tuple[str, ...] = ("GK", "DEF", "MID", "ATT")
 

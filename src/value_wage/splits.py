@@ -97,7 +97,9 @@ def make_splits(
     )
 
 
-def group_kfold_indices(frame: pd.DataFrame, *, n_splits: int = 3) -> list[tuple[np.ndarray, np.ndarray]]:
+def group_kfold_indices(
+    frame: pd.DataFrame, *, n_splits: int = 3
+) -> list[tuple[np.ndarray, np.ndarray]]:
     """Yield (train_idx, val_idx) pairs grouped by `player_id`.
 
     Positional indices into `frame`, not labels — ready for `.iloc`.
@@ -114,6 +116,5 @@ def group_kfold_indices(frame: pd.DataFrame, *, n_splits: int = 3) -> list[tuple
     gkf = GroupKFold(n_splits=n_splits)
     X_dummy = np.zeros((len(frame), 1))
     return [
-        (cast(np.ndarray, tr), cast(np.ndarray, va))
-        for tr, va in gkf.split(X_dummy, groups=groups)
+        (cast(np.ndarray, tr), cast(np.ndarray, va)) for tr, va in gkf.split(X_dummy, groups=groups)
     ]
