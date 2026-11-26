@@ -33,7 +33,9 @@ class PositionMedianRegressor:
         if self.position_col not in X.columns:
             raise KeyError(f"PositionMedianRegressor needs `{self.position_col}` in X.")
         tmp = pd.DataFrame({"pos": X[self.position_col].astype("string"), "y": y})
-        self._per_position = tmp.dropna().groupby("pos")["y"].median().to_dict()
+        self._per_position = {
+            str(k): float(v) for k, v in tmp.dropna().groupby("pos")["y"].median().items()
+        }
         self._global = float(np.median(y))
         return self
 

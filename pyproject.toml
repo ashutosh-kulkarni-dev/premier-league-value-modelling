@@ -32,7 +32,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.3", "hypothesis>=6.112", "ruff>=0.6", "mypy>=1.11"]
+dev = ["pytest>=8.3", "hypothesis>=6.112", "ruff==0.16.10", "mypy==2.4.0", "pandas-stubs", "types-PyYAML"]
 
 [project.scripts]
 vw = "value_wage.cli:app"
@@ -64,9 +64,12 @@ files = ["src/value_wage"]
 plugins = []
 disallow_untyped_decorators = false
 warn_unused_ignores = false
+# Bare np.ndarray and pandas-returns-Any are pervasive in numeric code; not worth the noise.
+disallow_any_generics = false
+warn_return_any = false
 
 [[tool.mypy.overrides]]
-module = ["lightgbm.*", "xgboost.*", "catboost.*", "shap.*", "pandera.*", "optuna.*", "mlflow.*", "sklearn.*", "seaborn.*", "plotly.*"]
+module = ["lightgbm.*", "xgboost.*", "catboost.*", "shap.*", "pandera.*", "optuna.*", "mlflow.*", "sklearn.*", "seaborn.*", "plotly.*", "scipy.*", "joblib.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

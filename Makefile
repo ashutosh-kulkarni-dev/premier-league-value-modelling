@@ -86,7 +86,7 @@ lint:
 type:
 	$(PY) -m mypy
 
-all: test lint data train evaluate
+all: test lint type data train evaluate
 
 clean:
 	rm -rf data/processed/* mlruns/* optuna.db reports/figures/* reports/*.html reports/*.pdf

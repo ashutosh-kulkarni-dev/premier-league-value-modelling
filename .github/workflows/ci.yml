@@ -5,34 +5,59 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  PYTHON_VERSION: "3.11"
+  # Keep in sync with the pin in pyproject.toml [project.optional-dependencies].dev
+  RUFF_VERSION: "0.16.10"
+
 jobs:
   lint:
-    name: Lint (ruff)
+    name: Lint + format (ruff)
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.4.0
+      - run: uvx ruff@${{ env.RUFF_VERSION }} check --output-format=github src/ tests/
+      - run: uvx ruff@${{ env.RUFF_VERSION }} format --check src/ tests/
+
+  typecheck:
+    name: Type check (mypy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.4.0
         with:
-          python-version: "3.11"
-          cache: pip
-      - run: python -m pip install --upgrade pip
-      - run: pip install "ruff>=0.6"
-      - run: ruff check src/ tests/
+          python-version: ${{ env.PYTHON_VERSION }}
+          activate-environment: true
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+      - run: uv pip install -e ".[dev]"
+      - run: mypy
 
   test:
     name: Tests (pytest)
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.4.0
         with:
-          python-version: "3.11"
-          cache: pip
-      - run: python -m pip install --upgrade pip
-      - run: pip install -e ".[dev]"
-      - run: pytest -q
+          python-version: ${{ env.PYTHON_VERSION }}
+          activate-environment: true
+          enable-cache: true
+          cache-dependency-glob: pyproject.toml
+      - run: uv pip install -e ".[dev]"
+      # -ra (from pyproject addopts) lists every skip. The Transfermarkt join tests in
+      # tests/test_tm_join.py always skip here: the ~1 GB Kaggle dump is not in the repo.
+      - run: pytest

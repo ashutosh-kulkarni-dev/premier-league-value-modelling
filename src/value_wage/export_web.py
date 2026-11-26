@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import numpy as np
 import pandas as pd
@@ -35,28 +35,54 @@ SHAP_TOP_K = 6
 # The 20 Premier League clubs for the 2025-26 season (canonical names). Promoted: Burnley,
 # Leeds United, Sunderland. Relegated out: Ipswich, Leicester, Southampton (and earlier Luton,
 # Sheffield United). Only players at these clubs this season appear on the site.
-PL_CLUBS_2025_26: frozenset[str] = frozenset({
-    "Arsenal", "Aston Villa", "Bournemouth", "Brentford", "Brighton & Hove Albion",
-    "Burnley", "Chelsea", "Crystal Palace", "Everton", "Fulham", "Leeds United",
-    "Liverpool", "Manchester City", "Manchester United", "Newcastle United",
-    "Nottingham Forest", "Sunderland", "Tottenham Hotspur", "West Ham United",
-    "Wolverhampton Wanderers",
-})
+PL_CLUBS_2025_26: frozenset[str] = frozenset(
+    {
+        "Arsenal",
+        "Aston Villa",
+        "Bournemouth",
+        "Brentford",
+        "Brighton & Hove Albion",
+        "Burnley",
+        "Chelsea",
+        "Crystal Palace",
+        "Everton",
+        "Fulham",
+        "Leeds United",
+        "Liverpool",
+        "Manchester City",
+        "Manchester United",
+        "Newcastle United",
+        "Nottingham Forest",
+        "Sunderland",
+        "Tottenham Hotspur",
+        "West Ham United",
+        "Wolverhampton Wanderers",
+    }
+)
 
 # Map the source clubs' name variants to one canonical name per club.
 _CLUB_CANON: dict[str, str] = {
-    "wolves": "Wolverhampton Wanderers", "wolverhampton": "Wolverhampton Wanderers",
+    "wolves": "Wolverhampton Wanderers",
+    "wolverhampton": "Wolverhampton Wanderers",
     "wolverhampton wanderers": "Wolverhampton Wanderers",
-    "west ham": "West Ham United", "west ham united": "West Ham United",
-    "brighton": "Brighton & Hove Albion", "brighton & hove al..": "Brighton & Hove Albion",
+    "west ham": "West Ham United",
+    "west ham united": "West Ham United",
+    "brighton": "Brighton & Hove Albion",
+    "brighton & hove al..": "Brighton & Hove Albion",
     "brighton & hove albion": "Brighton & Hove Albion",
-    "leeds": "Leeds United", "leeds united": "Leeds United",
-    "tottenham": "Tottenham Hotspur", "tottenham hotspur": "Tottenham Hotspur",
-    "man city": "Manchester City", "manchester city": "Manchester City",
-    "man united": "Manchester United", "man utd": "Manchester United",
+    "leeds": "Leeds United",
+    "leeds united": "Leeds United",
+    "tottenham": "Tottenham Hotspur",
+    "tottenham hotspur": "Tottenham Hotspur",
+    "man city": "Manchester City",
+    "manchester city": "Manchester City",
+    "man united": "Manchester United",
+    "man utd": "Manchester United",
     "manchester united": "Manchester United",
-    "newcastle": "Newcastle United", "newcastle united": "Newcastle United",
-    "nottingham forest": "Nottingham Forest", "nott'm forest": "Nottingham Forest",
+    "newcastle": "Newcastle United",
+    "newcastle united": "Newcastle United",
+    "nottingham forest": "Nottingham Forest",
+    "nott'm forest": "Nottingham Forest",
 }
 
 
@@ -82,11 +108,25 @@ class WebBundle:
 def _load_bio(tm_dir: Path) -> dict[int, dict[str, Any]]:
     """TM players.csv → {tm_player_id: bio dict}. Only the subset of fields a UI needs."""
     cols = [
-        "player_id", "first_name", "last_name", "name", "date_of_birth",
-        "country_of_birth", "country_of_citizenship", "sub_position", "position",
-        "foot", "height_in_cm", "contract_expiration_date", "agent_name",
-        "image_url", "international_caps", "international_goals",
-        "current_club_name", "market_value_in_eur", "highest_market_value_in_eur",
+        "player_id",
+        "first_name",
+        "last_name",
+        "name",
+        "date_of_birth",
+        "country_of_birth",
+        "country_of_citizenship",
+        "sub_position",
+        "position",
+        "foot",
+        "height_in_cm",
+        "contract_expiration_date",
+        "agent_name",
+        "image_url",
+        "international_caps",
+        "international_goals",
+        "current_club_name",
+        "market_value_in_eur",
+        "highest_market_value_in_eur",
     ]
     df = pd.read_csv(tm_dir / "players.csv", usecols=cols, low_memory=False)
     out: dict[int, dict[str, Any]] = {}
@@ -96,7 +136,9 @@ def _load_bio(tm_dir: Path) -> dict[int, dict[str, Any]]:
             "full_name": r.get("name"),
             "first_name": r.get("first_name"),
             "last_name": r.get("last_name"),
-            "date_of_birth": None if pd.isna(r.get("date_of_birth")) else str(r["date_of_birth"])[:10],
+            "date_of_birth": None
+            if pd.isna(r.get("date_of_birth"))
+            else str(r["date_of_birth"])[:10],
             "country_of_birth": r.get("country_of_birth"),
             "country_of_citizenship": r.get("country_of_citizenship"),
             "sub_position": r.get("sub_position"),
@@ -104,20 +146,25 @@ def _load_bio(tm_dir: Path) -> dict[int, dict[str, Any]]:
             "foot": r.get("foot"),
             "height_cm": None if pd.isna(r.get("height_in_cm")) else int(r["height_in_cm"]),
             "contract_expiration_date": (
-                None if pd.isna(r.get("contract_expiration_date"))
+                None
+                if pd.isna(r.get("contract_expiration_date"))
                 else str(r["contract_expiration_date"])[:10]
             ),
             "agent_name": r.get("agent_name"),
             "image_url": r.get("image_url"),
-            "international_caps": None if pd.isna(r.get("international_caps")) else int(r["international_caps"]),
-            "international_goals": None if pd.isna(r.get("international_goals")) else int(r["international_goals"]),
+            "international_caps": None
+            if pd.isna(r.get("international_caps"))
+            else int(r["international_caps"]),
+            "international_goals": None
+            if pd.isna(r.get("international_goals"))
+            else int(r["international_goals"]),
             "current_club": r.get("current_club_name"),
             "tm_current_market_value_eur": (
-                None if pd.isna(r.get("market_value_in_eur"))
-                else float(r["market_value_in_eur"])
+                None if pd.isna(r.get("market_value_in_eur")) else float(r["market_value_in_eur"])
             ),
             "tm_highest_market_value_eur": (
-                None if pd.isna(r.get("highest_market_value_in_eur"))
+                None
+                if pd.isna(r.get("highest_market_value_in_eur"))
                 else float(r["highest_market_value_in_eur"])
             ),
         }
@@ -128,8 +175,14 @@ def _load_career(tm_dir: Path, player_ids: set[int]) -> dict[int, list[dict[str,
     """Transfers history per player, chronological. Loans and permanents."""
     df = pd.read_csv(
         tm_dir / "transfers.csv",
-        usecols=["player_id", "transfer_date", "transfer_season",
-                 "from_club_name", "to_club_name", "transfer_fee"],
+        usecols=[
+            "player_id",
+            "transfer_date",
+            "transfer_season",
+            "from_club_name",
+            "to_club_name",
+            "transfer_fee",
+        ],
         low_memory=False,
     )
     df = df[df["player_id"].isin(player_ids)]
@@ -139,14 +192,18 @@ def _load_career(tm_dir: Path, player_ids: set[int]) -> dict[int, list[dict[str,
     for pid, grp in df.groupby("player_id"):
         rows = []
         for _, r in grp.iterrows():
-            rows.append({
-                "date": None if pd.isna(r["transfer_date"]) else r["transfer_date"].date().isoformat(),
-                "season": r.get("transfer_season"),
-                "from_club": r.get("from_club_name"),
-                "to_club": r.get("to_club_name"),
-                "fee_eur": None if pd.isna(r.get("transfer_fee")) else float(r["transfer_fee"]),
-            })
-        out[int(pid)] = rows
+            rows.append(
+                {
+                    "date": None
+                    if pd.isna(r["transfer_date"])
+                    else r["transfer_date"].date().isoformat(),
+                    "season": r.get("transfer_season"),
+                    "from_club": r.get("from_club_name"),
+                    "to_club": r.get("to_club_name"),
+                    "fee_eur": None if pd.isna(r.get("transfer_fee")) else float(r["transfer_fee"]),
+                }
+            )
+        out[int(cast(int, pid))] = rows
     return out
 
 
@@ -161,8 +218,16 @@ def _load_season_stats(tm_dir: Path, player_ids: set[int]) -> dict[int, list[dic
 
     appearances = pd.read_csv(
         tm_dir / "appearances.csv",
-        usecols=["player_id", "game_id", "goals", "assists", "minutes_played",
-                 "yellow_cards", "red_cards", "competition_id"],
+        usecols=[
+            "player_id",
+            "game_id",
+            "goals",
+            "assists",
+            "minutes_played",
+            "yellow_cards",
+            "red_cards",
+            "competition_id",
+        ],
         low_memory=False,
     )
     appearances = appearances[appearances["player_id"].isin(player_ids)]
@@ -185,7 +250,7 @@ def _load_season_stats(tm_dir: Path, player_ids: set[int]) -> dict[int, list[dic
 
     out: dict[int, list[dict[str, Any]]] = {}
     for pid, grp in agg.groupby("player_id"):
-        out[int(pid)] = [
+        out[int(cast(int, pid))] = [
             {
                 "season": str(r["season"]),
                 "matches": int(r["matches"]),
@@ -212,7 +277,7 @@ def _load_value_trajectory(tm_dir: Path, player_ids: set[int]) -> dict[int, list
     df = df.sort_values("date")
     out: dict[int, list[dict[str, Any]]] = {}
     for pid, grp in df.groupby("player_id"):
-        out[int(pid)] = [
+        out[int(cast(int, pid))] = [
             {
                 "date": r["date"].date().isoformat(),
                 "market_value_eur": float(r["market_value_in_eur"]),
@@ -272,10 +337,7 @@ def _top_shap_rows(
 ) -> list[dict[str, Any]]:
     row = shap_values[row_idx]
     order = np.argsort(-np.abs(row))[:k]
-    return [
-        {"feature": feature_names[i], "contribution_log": float(row[i])}
-        for i in order
-    ]
+    return [{"feature": feature_names[i], "contribution_log": float(row[i])} for i in order]
 
 
 def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBundle:
@@ -302,10 +364,23 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
 
     # Base identity rows across the whole feature matrix (not just test),
     # so the UI can list every player even if unlabelled.
-    identity_cols = [c for c in [
-        "player", "player_id", "season", "snapshot", "club", "team", "position",
-        "age", "minutes", "primary_position",
-    ] if c in features.columns]
+    identity_cols = [
+        c
+        for c in [
+            "player",
+            "player_id",
+            "season",
+            "snapshot",
+            "club",
+            "team",
+            "position",
+            "age",
+            "minutes",
+            "primary_position",
+        ]
+        if c in features.columns
+    ]
+
     def _safe(x: Any) -> Any:
         if x is None:
             return None
@@ -323,15 +398,21 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
     # position chip, which is the honest outcome when TM has no data.
     _SUB_POSITION_TO_BUCKET: dict[str, str] = {
         "goalkeeper": "GK",
-        "centre-back": "CB", "center-back": "CB",
-        "left-back": "FB", "right-back": "FB",
-        "left wing-back": "FB", "right wing-back": "FB",
+        "centre-back": "CB",
+        "center-back": "CB",
+        "left-back": "FB",
+        "right-back": "FB",
+        "left wing-back": "FB",
+        "right wing-back": "FB",
         "defensive midfield": "DM",
         "central midfield": "CM",
-        "left midfield": "W", "right midfield": "W",
+        "left midfield": "W",
+        "right midfield": "W",
         "attacking midfield": "AM",
-        "left winger": "W", "right winger": "W",
-        "centre-forward": "ST", "center-forward": "ST",
+        "left winger": "W",
+        "right winger": "W",
+        "centre-forward": "ST",
+        "center-forward": "ST",
         "second striker": "ST",
     }
 
@@ -390,9 +471,7 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
         explainer = shap.TreeExplainer(artifact.model)
         shap_vals = np.asarray(explainer.shap_values(X_t))
 
-        pred_lookup = {
-            (int(r["player_id"]), r["season"]): r for _, r in predictions_df.iterrows()
-        }
+        pred_lookup = {(int(r["player_id"]), r["season"]): r for _, r in predictions_df.iterrows()}
 
         conf_rows: list[dict[str, Any]] = []  # feeds the area×tier confidence table
         for ridx, (_, r) in enumerate(split.test.reset_index(drop=True).iterrows()):
@@ -407,25 +486,30 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
             if pred_row is not None:
                 block["predicted"] = float(pred_row["pred"])
                 block["residual_pct"] = (
-                    float(pred_row["residual_pct"]) if pd.notna(pred_row.get("residual_pct")) else None
+                    float(pred_row["residual_pct"])
+                    if pd.notna(pred_row.get("residual_pct"))
+                    else None
                 )
             block["verdict"] = _verdict(block.get("actual"), block.get("predicted"))
             per_player[key][target] = block
 
             if block.get("actual") and block.get("predicted") is not None:
-                conf_rows.append({
-                    "area": area_of(per_player[key].get("position")),
-                    "actual": block["actual"],
-                    "pred": block["predicted"],
-                })
+                conf_rows.append(
+                    {
+                        "area": area_of(per_player[key].get("position")),
+                        "actual": block["actual"],
+                        "pred": block["predicted"],
+                    }
+                )
 
         # Meta: global SHAP + metrics.
-        importance = (
-            np.abs(shap_vals).mean(axis=0).tolist()
-        )
-        global_shap = sorted(
-            [{"feature": feature_names[i], "mean_abs_shap": float(importance[i])} for i in range(len(feature_names))],
-            key=lambda d: -d["mean_abs_shap"],
+        importance = np.abs(shap_vals).mean(axis=0).tolist()
+        global_shap: list[dict[str, Any]] = sorted(
+            [
+                {"feature": feature_names[i], "mean_abs_shap": float(importance[i])}
+                for i in range(len(feature_names))
+            ],
+            key=lambda d: -cast(float, d["mean_abs_shap"]),
         )[:15]
         # Metrics computed inline from the predictions (interval-free; no calibrated json).
         a_log = predictions_df["actual_log"].to_numpy(dtype=float)
@@ -470,8 +554,8 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
     # Normalise club-name variants (the FM/TM sources mix "Wolves"/"Wolverhampton",
     # "West Ham"/"West Ham United", a truncated "Brighton & Hove Al..", etc.) to one canonical
     # name per club, so the Teams view doesn't split a club into duplicates.
-    for r in rows:
-        r["club"] = _canon_club(r.get("club"))
+    for rec in rows:
+        rec["club"] = _canon_club(rec.get("club"))
 
     # Only players in the 2025-26 Premier League belong on the site: they must have a 2025-26
     # row AND that row's club must be one of this season's 20 PL clubs. This drops players who
@@ -480,7 +564,8 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
     # 2025-26 site look stale and clumsy.
     prediction_season = settings.split.test_seasons[-1]
     current_player_ids = {
-        r["player_id"] for r in rows
+        r["player_id"]
+        for r in rows
         if r["season"] == prediction_season and r["club"] in PL_CLUBS_2025_26
     }
     rows = [r for r in rows if r["player_id"] in current_player_ids]
@@ -491,8 +576,12 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
     # Keep only list/table essentials in players.json; move the rest to data/player/<id>.json,
     # fetched on demand when a profile or comparison opens.
     BIO_SLIM = (
-        "image_url", "sub_position", "country_of_citizenship",
-        "contract_expiration_date", "tm_current_market_value_eur", "tm_highest_market_value_eur",
+        "image_url",
+        "sub_position",
+        "country_of_citizenship",
+        "contract_expiration_date",
+        "tm_current_market_value_eur",
+        "tm_highest_market_value_eur",
     )
 
     def _slim_target(block: dict[str, Any] | None) -> dict[str, Any] | None:
@@ -502,29 +591,37 @@ def export(settings: Settings | None = None, model_name: str = "lgbm") -> WebBun
 
     slim_rows: list[dict[str, Any]] = []
     detail: dict[int, dict[str, Any]] = {}
-    for r in rows:
-        bio = r.get("bio") or {}
-        slim_rows.append({
-            "player_id": r["player_id"], "player_tm_id": r["player_tm_id"],
-            "player": r["player"], "season": r["season"], "snapshot": r["snapshot"],
-            "club": r["club"], "position": r["position"], "age": r["age"], "minutes": r["minutes"],
-            "bio": {k: bio.get(k) for k in BIO_SLIM} if bio else None,
-            "value": _slim_target(r.get("value")),
-            "wage": _slim_target(r.get("wage")),
-        })
-        pid = r["player_id"]
+    for rec in rows:
+        bio = rec.get("bio") or {}
+        slim_rows.append(
+            {
+                "player_id": rec["player_id"],
+                "player_tm_id": rec["player_tm_id"],
+                "player": rec["player"],
+                "season": rec["season"],
+                "snapshot": rec["snapshot"],
+                "club": rec["club"],
+                "position": rec["position"],
+                "age": rec["age"],
+                "minutes": rec["minutes"],
+                "bio": {k: bio.get(k) for k in BIO_SLIM} if bio else None,
+                "value": _slim_target(rec.get("value")),
+                "wage": _slim_target(rec.get("wage")),
+            }
+        )
+        pid = rec["player_id"]
         if pid not in detail:
             detail[pid] = {
-                "bio": r.get("bio"),
-                "career": r.get("career") or [],
-                "season_stats": r.get("season_stats") or [],
-                "value_trajectory": r.get("value_trajectory") or [],
+                "bio": rec.get("bio"),
+                "career": rec.get("career") or [],
+                "season_stats": rec.get("season_stats") or [],
+                "value_trajectory": rec.get("value_trajectory") or [],
                 "shap": {},
             }
-        skey = f'{r["season"]}|{r["snapshot"]}'
+        skey = f"{rec['season']}|{rec['snapshot']}"
         shap_row = {}
         for tgt in ("value", "wage"):
-            blk = r.get(tgt)
+            blk = rec.get(tgt)
             if blk and blk.get("shap_top"):
                 shap_row[tgt] = blk["shap_top"]
         if shap_row:
